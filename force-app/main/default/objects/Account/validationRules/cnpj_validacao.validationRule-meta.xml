@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>cnpj_validacao</fullName>
+    <active>true</active>
+    <description>Valida se o cnpj é verdadeiro</description>
+    <errorConditionFormula>/* 1. Valida se tem 14 dígitos e se são apenas números */
+OR(
+  LEN(CNPJ__c) &lt;&gt; 14,
+  NOT(ISNUMBER(CNPJ__c)),
+
+/* 2. Valida o Primeiro Dígito Verificador */
+  VALUE(MID(CNPJ__c, 13, 1)) &lt;&gt; 
+  IF(
+    MOD(11 - MOD(
+      (VALUE(MID(CNPJ__c, 1, 1)) * 5) + (VALUE(MID(CNPJ__c, 2, 1)) * 4) + 
+      (VALUE(MID(CNPJ__c, 3, 1)) * 3) + (VALUE(MID(CNPJ__c, 4, 1)) * 2) + 
+      (VALUE(MID(CNPJ__c, 5, 1)) * 9) + (VALUE(MID(CNPJ__c, 6, 1)) * 8) + 
+      (VALUE(MID(CNPJ__c, 7, 1)) * 7) + (VALUE(MID(CNPJ__c, 8, 1)) * 6) + 
+      (VALUE(MID(CNPJ__c, 9, 1)) * 5) + (VALUE(MID(CNPJ__c, 10, 1)) * 4) + 
+      (VALUE(MID(CNPJ__c, 11, 1)) * 3) + (VALUE(MID(CNPJ__c, 12, 1)) * 2)
+    , 11), 11) &gt;= 10, 0, 
+    MOD(11 - MOD(
+      (VALUE(MID(CNPJ__c, 1, 1)) * 5) + (VALUE(MID(CNPJ__c, 2, 1)) * 4) + 
+      (VALUE(MID(CNPJ__c, 3, 1)) * 3) + (VALUE(MID(CNPJ__c, 4, 1)) * 2) + 
+      (VALUE(MID(CNPJ__c, 5, 1)) * 9) + (VALUE(MID(CNPJ__c, 6, 1)) * 8) + 
+      (VALUE(MID(CNPJ__c, 7, 1)) * 7) + (VALUE(MID(CNPJ__c, 8, 1)) * 6) + 
+      (VALUE(MID(CNPJ__c, 9, 1)) * 5) + (VALUE(MID(CNPJ__c, 10, 1)) * 4) + 
+      (VALUE(MID(CNPJ__c, 11, 1)) * 3) + (VALUE(MID(CNPJ__c, 12, 1)) * 2)
+    , 11), 11)
+  ),
+
+/* 3. Valida o Segundo Dígito Verificador */
+  VALUE(MID(CNPJ__c, 14, 1)) &lt;&gt; 
+  IF(
+    MOD(11 - MOD(
+      (VALUE(MID(CNPJ__c, 1, 1)) * 6) + (VALUE(MID(CNPJ__c, 2, 1)) * 5) + 
+      (VALUE(MID(CNPJ__c, 3, 1)) * 4) + (VALUE(MID(CNPJ__c, 4, 1)) * 3) + 
+      (VALUE(MID(CNPJ__c, 5, 1)) * 2) + (VALUE(MID(CNPJ__c, 6, 1)) * 9) + 
+      (VALUE(MID(CNPJ__c, 7, 1)) * 8) + (VALUE(MID(CNPJ__c, 8, 1)) * 7) + 
+      (VALUE(MID(CNPJ__c, 9, 1)) * 6) + (VALUE(MID(CNPJ__c, 10, 1)) * 5) + 
+      (VALUE(MID(CNPJ__c, 11, 1)) * 4) + (VALUE(MID(CNPJ__c, 12, 1)) * 3) + 
+      (VALUE(MID(CNPJ__c, 13, 1)) * 2)
+    , 11), 11) &gt;= 10, 0, 
+    MOD(11 - MOD(
+      (VALUE(MID(CNPJ__c, 1, 1)) * 6) + (VALUE(MID(CNPJ__c, 2, 1)) * 5) + 
+      (VALUE(MID(CNPJ__c, 3, 1)) * 4) + (VALUE(MID(CNPJ__c, 4, 1)) * 3) + 
+      (VALUE(MID(CNPJ__c, 5, 1)) * 2) + (VALUE(MID(CNPJ__c, 6, 1)) * 9) + 
+      (VALUE(MID(CNPJ__c, 7, 1)) * 8) + (VALUE(MID(CNPJ__c, 8, 1)) * 7) + 
+      (VALUE(MID(CNPJ__c, 9, 1)) * 6) + (VALUE(MID(CNPJ__c, 10, 1)) * 5) + 
+      (VALUE(MID(CNPJ__c, 11, 1)) * 4) + (VALUE(MID(CNPJ__c, 12, 1)) * 3) + 
+      (VALUE(MID(CNPJ__c, 13, 1)) * 2)
+    , 11), 11)
+  )
+)</errorConditionFormula>
+    <errorMessage>CNPJ é inválido</errorMessage>
+</ValidationRule>

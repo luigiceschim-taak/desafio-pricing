@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>produto_e_hierarquia_validacao</fullName>
+    <active>true</active>
+    <errorConditionFormula>(IF(ISBLANK(Hierarquia_Produto__c), 0, 1) + 
+ IF(ISBLANK(Produto__c), 0, 1)) &lt;&gt; 1</errorConditionFormula>
+    <errorMessage>Erro: escolha apenas um campo a preencher, Produto ou Hierarquia de Produto.</errorMessage>
+</ValidationRule>

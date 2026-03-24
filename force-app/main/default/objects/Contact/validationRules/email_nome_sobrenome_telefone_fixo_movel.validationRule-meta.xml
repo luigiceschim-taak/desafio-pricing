@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>email_nome_sobrenome_telefone_fixo_movel</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+   ISBLANK( Email ),
+   ISBLANK( Phone ),
+   ISBLANK( MobilePhone ),
+   ISBLANK( LastName )
+
+)</errorConditionFormula>
+    <errorMessage>Campos obrigatórios faltantes: Email, Phone, MobilePhone e LastName.</errorMessage>
+</ValidationRule>
