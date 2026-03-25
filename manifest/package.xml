@@ -2,10 +2,6 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
 		<members>*</members>
-		<name>ApexClass</name>
-	</types>
-	<types>
-		<members>*</members>
 		<name>ApexComponent</name>
 	</types>
 	<types>
@@ -25,11 +21,9 @@
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
-		<members>Account</members>
 		<members>Centro_de_Distribuicao__c</members>
 		<members>Cidade__c</members>
 		<members>Condicao_Pagamento__c</members>
-		<members>Contact</members>
 		<members>Endereco__c</members>
 		<members>Estado__c</members>
 		<members>Frete__c</members>
@@ -40,7 +34,6 @@
 		<members>Order</members>
 		<members>OrderItem</members>
 		<members>Pais__c</members>
-		<members>Product2</members>
 		<name>CustomObject</name>
 	</types>
 	<types>
