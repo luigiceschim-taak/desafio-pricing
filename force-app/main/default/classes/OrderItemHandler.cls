@@ -8,6 +8,7 @@ public class OrderItemHandler extends TriggerHandler {
         resgatarImpostoParaItem((List<OrderItem>) Trigger.new);
         resgatarValorFreteParaItem((List<OrderItem>) Trigger.new);
         resgatarMargemParaItem((List<OrderItem>) Trigger.new);
+        custoDeProd((List<OrderItem>) Trigger.new);
 
     }
 
@@ -166,7 +167,7 @@ public class OrderItemHandler extends TriggerHandler {
             Endereco__r.Cidade__r.Estado__r.Pais__c 
             FROM Order 
             WHERE Id IN :pedidosIds
-]);
+            ]);
 
         // 2. Criamos o Mapa de Regras com Chave Composta (Alvo + Localidade)
         Map<String, Frete__c> mapaRegras = new Map<String, Frete__c>();
@@ -230,20 +231,127 @@ public class OrderItemHandler extends TriggerHandler {
         }
     }
 
-    private void resgatarMargemParaItem(List<OrderItem> novosItens){
+    private void resgatarMargemParaItem(List<OrderItem> novosItens) {
+    Set<Id> produtosIds = new Set<Id>();
+    Set<Id> pedidosIds = new Set<Id>();
+    
+    for (OrderItem item : novosItens) {
+        if (item.Product2Id != null) {
+            produtosIds.add(item.Product2Id);
+            pedidosIds.add(item.OrderId);
+        }
+    }
+    if (produtosIds.isEmpty()) return;
+
+    // 1. Hierarquias dos Produtos
+    Map<Id, Product2> mapaProdutos = new Map<Id, Product2>([
+        SELECT Id, Hierarquia_Produto__c FROM Product2 WHERE Id IN :produtosIds
+    ]);
+    
+    Set<Id> hierarquiasIds = new Set<Id>();
+    for (Product2 p : mapaProdutos.values()) {
+        if (p.Hierarquia_Produto__c != null) hierarquiasIds.add(p.Hierarquia_Produto__c);
+    }
+
+    // 2. Dados do Pedido (Cliente, Grupo e Localidade)
+    Map<Id, Order> mapaPedidos = new Map<Id, Order>([
+        SELECT Id, AccountId, Account.Grupo_Clientes__c, Endereco__c,
+               Endereco__r.Cidade__c, 
+               Endereco__r.Cidade__r.Estado__c, 
+               Endereco__r.Cidade__r.Estado__r.Pais__c
+        FROM Order WHERE Id IN :pedidosIds
+    ]);
+
+    // 3. Mapa de Regras de Margem
+    Map<String, Margem__c> mapaRegras = new Map<String, Margem__c>();
+    
+    for (Margem__c m : [
+        SELECT Valor__c, Produto__c, Hierarquia_Produto__c, 
+               Conta__c, Grupo_Conta__c, Cidade__c, Estado__c, Pais__c 
+        FROM Margem__c 
+        WHERE Status__c = 'Aprovado'
+        AND (Produto__c IN :produtosIds OR Hierarquia_Produto__c IN :hierarquiasIds OR Produto__c = null)
+    ]) {
+        Id alvoId = (m.Produto__c != null) ? m.Produto__c : m.Hierarquia_Produto__c;
+        Id cliId  = (m.Conta__c != null) ? m.Conta__c : m.Grupo_Conta__c;
+        Id locId  = (m.Cidade__c != null) ? m.Cidade__c : (m.Estado__c != null ? m.Estado__c : m.Pais__c);
         
-        Set<Id> produtosIds = new Set<Id>();
-        Set<Id> pedidosId = new Set<Id>();
-        
-        for (OrderItem item : novosItens) {
-            if (item.Product2Id != null) {
-                produtosIds.add(item.Product2Id);
-                pedidosId.add(item.OrderId);
+        if (alvoId != null && cliId != null && locId != null) {
+            mapaRegras.put((String)alvoId + (String)cliId + (String)locId, m);
+        }
+    }
+
+    // 4. Motor de Busca (Usando Boolean em vez de Label)
+    for (OrderItem item : novosItens) {
+        Order ped = mapaPedidos.get(item.OrderId);
+        Product2 prod = mapaProdutos.get(item.Product2Id);
+        if (ped == null || prod == null || ped.Endereco__c == null) continue;
+
+        // Listas de Prioridade (O primeiro da lista é o mais importante)
+        List<Id> prods = new List<Id>{ prod.Id, prod.Hierarquia_Produto__c };
+        List<Id> clis  = new List<Id>{ ped.AccountId, ped.Account.Grupo_Clientes__c };
+        List<Id> locs  = new List<Id>{ 
+            ped.Endereco__r.Cidade__c, 
+            ped.Endereco__r.Cidade__r.Estado__c, 
+            ped.Endereco__r.Cidade__r.Estado__r.Pais__c 
+        };
+
+        Margem__c match = null;
+        Boolean encontrou = false; // Nossa "bandeira" para parar os loops
+
+        for (Id p : prods) {
+            if (p == null || encontrou) break; 
+            
+            for (Id c : clis) {
+                if (c == null || encontrou) break;
+                
+                for (Id l : locs) {
+                    if (l == null) continue;
+                    
+                    String chave = (String)p + (String)c + (String)l;
+                    
+                    if (mapaRegras.containsKey(chave)) {
+                        match = mapaRegras.get(chave);
+                        encontrou = true; // Ativa a bandeira
+                        break; // Sai do loop da localidade
+                    }
+                }
             }
         }
-        if (produtosIds.isEmpty()) return;
 
-        Map<Id, Margem__c> mapaMargem = new Map<Id, Margem__c>();
-
+        if (match != null) {
+            item.Porcentagem_Margem__c = match.Valor__c;
+        }
     }
+}
+
+    private void custoDeProd(List<OrderItem> novosItens){
+
+            Set<Id> produtosIds = new Set<Id>();
+            Set<Id> pedidosIds = new Set<Id>();
+
+            for (OrderItem item : novosItens) {
+                if (item.Product2Id != null) {
+                    produtosIds.add(item.Product2Id);
+                    pedidosIds.add(item.OrderId);
+                }
+            }
+            if (produtosIds.isEmpty()) return;
+
+            Map<Id, Product2> mapaProdutos = new Map<Id,Product2>([
+                SELECT Id, Custo_Producao__c 
+                FROM Product2 
+                WHERE Id IN :produtosIds
+            ]); 
+
+            for (OrderItem item : novosItens){
+                if(mapaProdutos.containsKey(item.Product2Id)){
+                    item.Custo_Producao__c = mapaProdutos.get(item.Product2Id).Custo_Producao__c;
+                }
+
+            }
+    }        
+
+
+
 }
