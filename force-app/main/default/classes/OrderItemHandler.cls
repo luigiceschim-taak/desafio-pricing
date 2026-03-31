@@ -122,6 +122,7 @@ public class OrderItemHandler extends TriggerHandler {
                 } else {
                     // Caso não encontre, você pode definir um valor padrão ou logar um aviso
                     System.debug('Aviso: Nenhum imposto encontrado para o Produto ' + item.Product2Id + ' no CD ' + pedidoPai.Centro_Distribuicao__c);
+                    item.addError('Erro: não há imposto para este produto. Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing. ');
                 }
             }
         }
@@ -227,7 +228,12 @@ public class OrderItemHandler extends TriggerHandler {
             if (match != null) {
                 System.debug(match);
                 item.Valor_Frete__c = match.Valor__c;
+                System.debug('Valor do frete encontrado para o item ' + item.Id + ': ' + match.Valor__c +item.Valor_Frete__c);
+            }else{
+                System.debug('Aviso: Nenhum frete encontrado para o Produto ' + item.Product2Id + ' no CD ' + ped.Centro_Distribuicao__c );
+                item.addError('ERRO: Não há frete encontrado. Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
             }
+        
         }
     }
 
@@ -321,6 +327,8 @@ public class OrderItemHandler extends TriggerHandler {
 
         if (match != null) {
             item.Porcentagem_Margem__c = match.Valor__c;
+        }else{
+            item.addError('Erro: Margem não existe. Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
         }
     }
 }
