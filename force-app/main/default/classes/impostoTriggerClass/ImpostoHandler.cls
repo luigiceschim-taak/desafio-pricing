@@ -3,67 +3,15 @@ public with sharing class ImpostoHandler extends ImpostoTriggerHandler {
     public override void beforeInsert() {
         // Lógica específica para before insert
         System.debug('Executando lógica de before insert');
-        validarDuplicidadeImposto((List<Imposto__c>)Trigger.new);
+        ImpostoService.validarDuplicidadeImposto((List<Imposto__c>)Trigger.new);
     }
 
     public override void beforeUpdate() {
         // Lógica específica para before update
         System.debug('Executando lógica de before update');
-        validarDuplicidadeImposto((List<Imposto__c>)Trigger.new);
+        ImpostoService.validarDuplicidadeImposto((List<Imposto__c>)Trigger.new);
     }
 
-    private void validarDuplicidadeImposto(List<Imposto__c> impostos){
-        Set<String> chavesNovas = new Set<String>();
-        Set<Id> idsExistentesNoLote = new Set<Id>();
-    
-        // 1. Coleta chaves do lote e valida valores básicos
-        for (Imposto__c i : impostos) {
-            if (i.Imposto_Custo__c == null || i.Imposto_Custo__c <= 0) {
-                i.addError('O valor do Imposto de Custo deve ser maior que zero.');
-            }
-            
-            String chave = gerarChave(i);
-            
-            // Valida duplicidade dentro do próprio lote (ex: duas linhas iguais no Excel)
-            if (chavesNovas.contains(chave)) {
-                i.addError('Erro: Registro duplicado no mesmo lote para a combinação: ' + chave);
-            }
-            chavesNovas.add(chave);
-            
-            if (i.Id != null) idsExistentesNoLote.add(i.Id);
-        }
-
-        // 2. Busca no banco APENAS os registros que coincidem com as chaves do lote
-        // Usamos um Map para que a verificação seja instantânea depois
-        Map<String, Imposto__c> mapaExistentes = new Map<String, Imposto__c>();
-        
-        // Importante: Para esta query ser eficiente, o ideal é você ter um campo 
-        // de texto chamado Chave_Tecnica__c preenchido pela Trigger.
-        // Caso não tenha, filtramos pelos campos que compõem a chave:
-        for (Imposto__c existente : [SELECT Id, Product__c, Centro_Distribuicao__c, Estado__c 
-                                    FROM Imposto__c 
-                                    WHERE Status__c = 'Aprovado' 
-                                    AND Id NOT IN :idsExistentesNoLote]) {
-            
-            // Adicionamos ao mapa: Chave -> Registro
-            mapaExistentes.put(gerarChave(existente), existente);
-        }
-
-        // 3. Comparação Final (Sem loops aninhados!)
-        for (Imposto__c novo : impostos) {
-            String chaveNovo = gerarChave(novo);
-            
-            // O método .containsKey() é ultra rápido
-            if (mapaExistentes.containsKey(chaveNovo)) {
-                novo.addError('Já existe um registro de Imposto Ativo com esta exata combinação: ' + chaveNovo);
-            }
-        }
-    }
-
-    private String gerarChave(Imposto__c i) {
-        return  (i.Product__c != null ? (String)i.Product__c : 'null') + '|' +
-                (i.Centro_Distribuicao__c != null ? (String)i.Centro_Distribuicao__c : 'null') + '|' +
-                (i.Estado__c != null ? (String)i.Estado__c : 'null');
-    }
+   
     
 }
