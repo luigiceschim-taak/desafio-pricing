@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>unit_price_maior_que_zero</fullName>
+    <active>true</active>
+    <errorConditionFormula>UnitPrice &lt;  ListPrice</errorConditionFormula>
+    <errorMessage>Erro: não é possível fazer a venda menor que o custo de catálogo.</errorMessage>
+</ValidationRule>

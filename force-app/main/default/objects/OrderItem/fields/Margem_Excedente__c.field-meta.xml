@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Desconto_Produto__c</fullName>
-    <formula>IF(
-    (Preco_Ideal_venda__c - UnitPrice) / Preco_Ideal_venda__c &lt;= 0,
-    0,
-    (Preco_Ideal_venda__c - UnitPrice) / Preco_Ideal_venda__c
+    <fullName>Margem_Excedente__c</fullName>
+    <formula>IF( ((Preco_Total_Venda__c / Preco_Total__c) - 1) &lt;= 0, 
+ 0,
+  ((Preco_Total_Venda__c / Preco_Total__c) - 1)
+ 
 )</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
-    <label>Desconto</label>
+    <label>Margem de Contribuição Excedente.</label>
     <precision>18</precision>
     <required>false</required>
     <scale>2</scale>

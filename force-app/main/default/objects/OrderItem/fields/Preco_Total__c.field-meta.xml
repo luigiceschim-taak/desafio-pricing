@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Preco_Total__c</fullName>
-    <formula>(Preco_S_Margem__c * (1 +  Porcentagem_Margem__c )) *  Quantity</formula>
+    <formula>(( Custo_Producao__c  *(1 + Porcentagem_Imposto__c ) * (1 +  Porcentagem_Margem__c )) *  Quantity ) +  Valor_Frete__c</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Preço Total</label>
     <precision>18</precision>
