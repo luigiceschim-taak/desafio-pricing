@@ -98,6 +98,6 @@
         <formFactor>Small</formFactor>
         <type>Default</type>
     </actionOverrides>
-    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <compactLayoutAssignment>agro</compactLayoutAssignment>
     <enableFeeds>false</enableFeeds>
 </CustomObject>
