@@ -22,17 +22,16 @@ public with sharing class FreteService {
 
         Map<String, Frete__c> mapaExistentes = new Map<String, Frete__c>();
 
-        for(Frete__c existente : [SELECT Id, Produto__c, Hierarquia_Produto__c, Estado__c, Cidade__c, Pais__c 
+        for(Frete__c existente : [SELECT Id, Produto__c, Hierarquia_Produto__c, Estado__c, Cidade__c, Pais__c, Centro_Distribuicao__c 
                                     FROM Frete__c 
-                                    WHERE Status__c = 'Aprovado' 
-                                    AND Id NOT IN :idsExistentesNoLote]) {
+                                    WHERE Id NOT IN :idsExistentesNoLote ]) {
             mapaExistentes.put(gerarChave(existente), existente);
         }
 
         for(Frete__c novo : fretes) {
             String chaveNovo = gerarChave(novo);
             if (mapaExistentes.containsKey(chaveNovo)) {
-                novo.addError('Já existe um registro de Frete Ativo com esta exata combinação: ' + chaveNovo);
+                novo.addError('Já existe um registro de Frete Ativo com esta exata combinação: ' + chaveNovo +  'produto/hierarquia/cd/estado/cidade/país');
             }
         }
     }
@@ -40,6 +39,7 @@ public with sharing class FreteService {
     private static String gerarChave(Frete__c f) {
         return  (f.Produto__c != null ? (String)f.Produto__c : 'null') + '|' +
                 (f.Hierarquia_Produto__c != null ? (String)f.Hierarquia_Produto__c : 'null') + '|' +
+                (f.Centro_Distribuicao__c != null ? (String)f.Centro_Distribuicao__c : 'null') + '|' +
                 (f.Cidade__c != null ? (String)f.Cidade__c : 'null') + '|' +
                 (f.Estado__c != null ? (String)f.Estado__c : 'null') + '|' +
                 (f.Pais__c != null ? (String)f.Pais__c : 'null');

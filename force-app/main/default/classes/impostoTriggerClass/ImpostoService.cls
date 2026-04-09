@@ -28,24 +28,21 @@ public with sharing class ImpostoService {
         // Usamos um Map para que a verificação seja instantânea depois
         Map<String, Imposto__c> mapaExistentes = new Map<String, Imposto__c>();
         
-        // Importante: Para esta query ser eficiente, o ideal é você ter um campo 
-        // de texto chamado Chave_Tecnica__c preenchido pela Trigger.
-        // Caso não tenha, filtramos pelos campos que compõem a chave:
+        
         for (Imposto__c existente : [SELECT Id, Product__c, Centro_Distribuicao__c, Estado__c 
                                     FROM Imposto__c 
-                                    WHERE Status__c = 'Aprovado' 
-                                    AND Id NOT IN :idsExistentesNoLote]) {
+                                    WHERE Id NOT IN :idsExistentesNoLote]) {
             
             // Adicionamos ao mapa: Chave -> Registro
             mapaExistentes.put(gerarChave(existente), existente);
         }
 
-        // 3. Comparação Final (Sem loops aninhados!)
+        // 3. Comparação Final 
         for (Imposto__c novo : impostos) {
             String chaveNovo = gerarChave(novo);
             
-            // O método .containsKey() é ultra rápido
             if (mapaExistentes.containsKey(chaveNovo)) {
+
                 novo.addError('Já existe um registro de Imposto Ativo com esta exata combinação: ' + chaveNovo);
             }
         }
