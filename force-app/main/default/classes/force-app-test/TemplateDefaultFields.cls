@@ -30,4 +30,13 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+
+    public class PaisDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Pais' + countSObjectCreated,
+                'Sigla__c' => 'P' + countSObjectCreated
+            };
+        }
+    }
 }
