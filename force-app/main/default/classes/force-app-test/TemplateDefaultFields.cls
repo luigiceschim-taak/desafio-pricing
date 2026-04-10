@@ -39,4 +39,13 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
-}
+
+    public class EstadoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Estado' + countSObjectCreated,
+                'Sigla__c' => 'E' + countSObjectCreated
+            };
+        }
+    }
+} 
