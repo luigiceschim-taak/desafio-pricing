@@ -21,6 +21,7 @@
  */
 @isTest
 private class CidadeTest {
+    
 
     @TestSetup
     static void makeData(){
@@ -32,6 +33,52 @@ private class CidadeTest {
         estado.Pais__c = pais.Id;
         insert estado;    
     }
+
+    @isTest
+    static void shouldCreateCidade() {
+        // Arrange
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
+
+        Cidade__c cidade = (Cidade__c) TestFactorySObject.getInstance().createSObject(new Cidade__c());
+        cidade.Estado__c = estado.Id;
+        
+        Test.startTest();
+        try{
+            insert cidade;
+            System.debug('Cidade__c inserted successfully with Id: ' + cidade.Id);
+            System.assert(true,'Expected: SUCCESS');
+       
+        }catch(DmlException e){
+
+            System.assert(false,'Unexpected DmlException was thrown: ' + e.getMessage());
+
+       }
+       Test.stopTest();
+    }
+
+    @isTest
+    static void shouldFailWhenCreatingCidadeWithoutEstado() {
+        // Arrange
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
+
+        Cidade__c cidade = (Cidade__c) TestFactorySObject.getInstance().createSObject(new Cidade__c());
+        cidade.Estado__c = null;
+
+        
+        Test.startTest();
+        try{
+            insert cidade;
+            System.debug('Cidade__c inserted successfully with Id: ' + cidade.Id);
+            Assert.fail('Deveria ter lançado uma DmlException devido à falta do Estado__c');
+       
+        }catch(DmlException e){
+
+            Assert.isTrue(true, 'Expected DmlException was thrown: ' + e.getMessage());
+
+       }
+       Test.stopTest();
+    }
+
     
     @isTest
     static void shouldFailWhenCreatingCidadeWithoutName() {
