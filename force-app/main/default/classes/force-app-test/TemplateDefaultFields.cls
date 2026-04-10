@@ -13,4 +13,21 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+
+    public class GrupoContaDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Grupo' + countSObjectCreated
+            };
+        }
+    }
+
+    public class AccountDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Demo Account ' + countSObjectCreated,
+                'CNPJ__c' => '12345678000195'
+            };
+        }
+    }
 }
