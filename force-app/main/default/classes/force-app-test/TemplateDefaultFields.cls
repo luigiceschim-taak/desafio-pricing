@@ -48,4 +48,12 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    public class CidadeDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Cidade' + countSObjectCreated,
+                'Codigo_IBGE__c' => '000000' + countSObjectCreated
+            };
+        }
+    }
 } 
