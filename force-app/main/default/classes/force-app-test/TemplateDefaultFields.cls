@@ -90,4 +90,13 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    public class Product2Defaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Produto ' + countSObjectCreated,
+                'Custo_Producao__c' => 100 + countSObjectCreated
+                
+            };
+        }
+    }
 } 
