@@ -64,4 +64,11 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    public class CondicaoPagamentoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Condição de Pagamento ' + countSObjectCreated
+            };
+        }
+    }
 } 
