@@ -71,4 +71,16 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    
+    public class EnderecoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Endereço ' + countSObjectCreated,
+                'Bairro__c' => 'Bairro ' + countSObjectCreated,
+                'Logradouro__c' => 'Logradouro ' + countSObjectCreated,
+                'CEP__c' => '00000-00' + countSObjectCreated
+
+            };
+        }
+    }
 } 
