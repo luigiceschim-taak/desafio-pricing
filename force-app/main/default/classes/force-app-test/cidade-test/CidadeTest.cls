@@ -21,7 +21,7 @@
  */
 @isTest
 private class CidadeTest {
-    
+
 
     @TestSetup
     static void makeData(){
@@ -45,12 +45,20 @@ private class CidadeTest {
         Test.startTest();
         try{
             insert cidade;
+
+            Cidade__c actual = [SELECT Id, Name, Codigo_IBGE__c, Estado__c FROM Cidade__c WHERE Id = :cidade.Id LIMIT 1];
+
             System.debug('Cidade__c inserted successfully with Id: ' + cidade.Id);
-            System.assert(true,'Expected: SUCCESS');
-       
+
+            Assert.isNotNull(actual.Id, 'Expected: Id should not be null');
+            Assert.areEqual(cidade.Name, actual.Name, 'Expected: Name should match');
+            Assert.areEqual(cidade.Codigo_IBGE__c, actual.Codigo_IBGE__c, 'Expected: Codigo_IBGE__c should match');
+            Assert.areEqual(cidade.Estado__c, actual.Estado__c, 'Expected: Estado__c should match');
+
+            System.debug('Successfully validated inserted Cidade__c with Id: ' + cidade.Id);
         }catch(DmlException e){
 
-            System.assert(false,'Unexpected DmlException was thrown: ' + e.getMessage());
+            Assert.fail('Unexpected DmlException was thrown: ' + e.getMessage());
 
        }
        Test.stopTest();
@@ -73,7 +81,8 @@ private class CidadeTest {
        
         }catch(DmlException e){
 
-            Assert.isTrue(true, 'Expected DmlException was thrown: ' + e.getMessage());
+            Assert.isNull(cidade.Estado__c);
+            Assert.isTrue(e.getMessage().contains('REQUIRED_FIELD_MISSING'), 'Expected: DmlException should mention REQUIRED_FIELD_MISSING');
 
        }
        Test.stopTest();
@@ -96,7 +105,8 @@ private class CidadeTest {
             Assert.fail('Deveria ter lançado uma DmlException devido à falta do nome');
         }catch(DmlException e){
 
-            Assert.isTrue(true, 'Expected DmlException was thrown: ' + e.getMessage());
+            Assert.isNull(cidade.Name, 'Expected: Name should be null');
+            Assert.isTrue(e.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Expected: DmlException should mention FIELD_CUSTOM_VALIDATION_EXCEPTION');
        }
        Test.stopTest();
     }
@@ -116,10 +126,12 @@ private class CidadeTest {
         try{
             insert cidade;
             
-            Assert.fail('Deveria ter lançado uma DmlException devido à falta do Código IBGE');
+            Assert.fail('Should have thrown a DmlException due to missing Codigo_IBGE__c');
         }catch(DmlException e){
             System.debug('Expected DmlException was thrown: ' + e.getMessage());
-            Assert.isTrue(true, 'exceção deve mencionar o campo' + e.getMessage());
+            
+            Assert.isNull(cidade.Codigo_IBGE__c);
+            Assert.isTrue(e.getMessage().contains('REQUIRED_FIELD_MISSING'), 'Expected: DmlException should mention REQUIRED_FIELD_MISSING');
         }
         Test.stopTest();
     }

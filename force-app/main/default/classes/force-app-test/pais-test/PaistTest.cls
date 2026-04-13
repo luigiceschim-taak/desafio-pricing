@@ -28,18 +28,23 @@ private class PaistTest {
         Pais__c pais = (Pais__c) TestFactorySObject.getInstance().createSObject(new Pais__c());
 
         Test.startTest();
-       try{
-        insert pais;
-        System.debug('Pais__c inserted successfully with Id: ' + pais.Id);
-        System.assert(true,'Expected: DmlException was not thrown');
-       
-        }catch(DmlException e){
+
         
-            System.assert(false,'Unexpected DmlException was thrown: ' + e.getMessage());
 
+       try{
+            insert pais;
+            System.debug('Pais__c inserted successfully with Id: ' + pais.Id);
 
-       }
-       Test.stopTest();
+            Pais__c actual = [SELECT Id, Sigla__c, Name FROM Pais__c WHERE Id = :pais.Id LIMIT 1];
+
+            Assert.areEqual(pais.Id, actual.Id, 'Expected: Id should match');
+            Assert.areEqual(pais.Sigla__c, actual.Sigla__c, 'Expected: Sigla__c should match');
+            Assert.areEqual(pais.Name, actual.Name, 'Expected: Name should match');
+            }catch(DmlException e){
+                Assert.fail('Unexpected DmlException was thrown: ' + e.getMessage());
+            
+            }
+        Test.stopTest();
     }
 
     @isTest
@@ -52,13 +57,13 @@ private class PaistTest {
        try{
         insert pais;
         System.debug('Pais__c inserted successfully with Id: ' + pais.Id);
-        System.assert(false,'Expected: DmlException was not thrown');
+        
+        Assert.fail('Expected: DmlException was not thrown');
        
         }catch(DmlException e){
         
-            System.assert(true,'Unexpected DmlException was thrown: ' + e.getMessage());
-
-
+            Assert.isTrue(pais.Name == null);
+            Assert.isTrue(e.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Mensagem deve mencionar Name');
        }
        Test.stopTest();
     }
@@ -73,11 +78,10 @@ private class PaistTest {
        try{
         insert pais;
         System.debug('Pais__c inserted successfully with Id: ' + pais.Id);
-        System.assert(false,'Expected: DmlException was not thrown');
+        Assert.fail('Expected: DmlException was not thrown');
        
         }catch(DmlException e){
-        
-            System.assert(true,'Unexpected DmlException was thrown: ' + e.getMessage());
+            Assert.isTrue(e.getMessage().contains('Sigla__c'), 'Mensagem deve mencionar Sigla__c');
 
 
        }

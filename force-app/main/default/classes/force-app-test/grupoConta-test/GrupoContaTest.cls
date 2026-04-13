@@ -23,6 +23,26 @@
 private class GrupoContaTest {
 
     @isTest
+    static void shouldCreateGrupoConta() {
+        // Arrange
+        Grupo_Conta__c grupo = (Grupo_Conta__c) TestFactorySObject.getInstance().createSObject(new Grupo_Conta__c());
+        
+        Test.startTest();
+        try {
+            insert grupo;
+            System.debug('Grupo_Conta__c inserted successfully with Id: ' + grupo.Id);
+
+            Grupo_Conta__c actual = [SELECT Id, Name FROM Grupo_Conta__c WHERE Id = :grupo.Id LIMIT 1];
+
+            Assert.areEqual(grupo.Id, actual.Id, 'Expected: Id should match');
+            Assert.areEqual(grupo.Name, actual.Name, 'Expected: Name should match');
+        }catch(DmlException e){
+            Assert.fail('Unexpected DmlException was thrown: ' + e.getMessage());
+       }
+       Test.stopTest();
+    }
+
+    @isTest
     static void shouldFailWhenGrupoContaWillBeCreatedWithoutName() {
         // TO DO: implement unit test
 
@@ -32,11 +52,11 @@ private class GrupoContaTest {
         Test.startTest();
         try {
             insert grupo;
-            System.assert(false, 'Expected: DmlException was not thrown');
+            Assert.fail('Erro: conta inserida em teste de criar sem nome');
         }catch (DmlException e) {
             
-            String statusCode = e.getDmlStatusCode(0);
-            System.assertEquals('FIELD_CUSTOM_VALIDATION_EXCEPTION', statusCode, 'Expected exception type should be FIELD_CUSTOM_VALIDATION_EXCEPTION');            
+            System.debug('Erro esperado: ' + e.getMessage());
+            Assert.isTrue(e.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Mensagem deve mencionar Name');          
         }
         Test.stopTest();
     }

@@ -22,20 +22,32 @@
 @isTest
 private class AccountTest {
 
+    @TestSetup
+    static void makeData(){
+        Grupo_Conta__c grupo = (Grupo_Conta__c) TestFactorySObject.getInstance().createSObject(new Grupo_Conta__c());
+        insert grupo;
+    }
+
     @isTest
     static void shouldFailWhenAccountWillBeCreatedWithInvalidCNPJ() {
         // Arrange
+
+        Grupo_Conta__c grupo = [SELECT Id FROM Grupo_Conta__c LIMIT 1];
+
         Account acc = (Account) TestFactorySObject.getInstance().createSObject(new Account());
-        acc.CNPJ__c = '0000000000000000';
+        acc.Grupo_Clientes__c = grupo.Id;
+        acc.CNPJ__c = '00000000000001';
 
 
-        // Act & Assert
+        
         try {
             insert acc;
-            System.assert(false, 'Expected: DmlException was not thrown');
+            Assert.fail('Expected: DmlException was not thrown');
         } catch (DmlException e) {
             System.debug('Erro esperado: ' + e.getMessage());
-            System.assert(e.getMessage().contains('CNPJ'), 'Mensagem deve mencionar CNPJ');
+
+            Assert.isTrue(e.getMessage().contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Mensagem deve mencionar FIELD_CUSTOM_VALIDATION_EXCEPTION');
+            
         }
     }
 
@@ -43,42 +55,46 @@ private class AccountTest {
     static void shouldFailWhenAccountWillBeCreatedWithoutAccountGroup() {
 
     
-        // Arrange
+        
         Account acc = (Account) TestFactorySObject.getInstance().createSObject(new Account());
+        acc.Grupo_Clientes__c = null; 
 
-        // Act & Assert
         try {
             insert acc;
-            System.assert(false, 'Expected: DmlException was not thrown');
+            Assert.fail('Expected: DmlException was not thrown');
         } catch (DmlException e) {
             System.debug('Erro esperado: ' + e.getMessage());
-            System.assert(e.getMessage().contains('Grupo_Clientes__c'), 'Mensagem deve mencionar Grupo de Clientes');
-        }
+            Assert.isNull(acc.Grupo_Clientes__c);
+            Assert.isTrue(e.getMessage().contains('REQUIRED_FIELD_MISSING'), 'Mensagem deve mencionar REQUIRED_FIELD_MISSING');}
     }
 
     @isTest
     static void shouldCreateAccountWithAccountGroupCNPJName() {
 
-        // Arrange
-        Grupo_Conta__c grupo = (Grupo_Conta__c) TestFactorySObject.getInstance().createSObject(new Grupo_Conta__c());
-        insert grupo;
+        Grupo_Conta__c grupo = [SELECT Id FROM Grupo_Conta__c LIMIT 1];
 
         Account acc = (Account) TestFactorySObject.getInstance().createSObject(new Account());
-        
-        
-        // Act
-        
         acc.Grupo_Clientes__c = grupo.Id;
         
-        insert acc;
+        
+        try{
+            insert acc;
+            System.debug('Account inserted successfully with Id: ' + acc.Id);
 
-        // Assert
-        Account insertedAcc = [SELECT Id, Name, Grupo_Clientes__c FROM Account WHERE Id = :acc.Id];
-        
-        
-        System.assertEquals(acc.Id, insertedAcc.Id);
-        System.assertEquals(grupo.Id, insertedAcc.Grupo_Clientes__c);
+            Account actual = [SELECT Id, Name, CNPJ__c, Grupo_Clientes__c FROM Account WHERE Id = :acc.Id LIMIT 1];
+
+            Assert.isNotNull(actual.Id, 'Expected: Id should not be null');
+            Assert.areEqual(acc.Name, actual.Name, 'Expected: Name should match');
+            Assert.areEqual(acc.CNPJ__c, actual.CNPJ__c, 'Expected: CNPJ__c should match');
+            Assert.areEqual(acc.Grupo_Clientes__c, actual.Grupo_Clientes__c, 'Expected: Grupo_Clientes__c should match');
+
+            System.debug('Successfully validated inserted Account with Id: ' + acc.Id);
+
+        }catch(DmlException e){
+            System.debug('Unexpected DmlException was thrown: ' + e.getMessage());
+            Assert.fail('Unexpected DmlException was thrown: ' + e.getMessage());
+
+        }
     }
 
-    
-}
+}  
