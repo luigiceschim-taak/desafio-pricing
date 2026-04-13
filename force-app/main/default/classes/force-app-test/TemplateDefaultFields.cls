@@ -108,4 +108,14 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+
+    public class FreteDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Frete ' + countSObjectCreated,
+                'Valor__c' => 500 + countSObjectCreated,
+                'Status__c' => 'Aprovado'
+            };
+        }
+    }
 } 
