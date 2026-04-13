@@ -99,4 +99,13 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    public class ImpostoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Imposto ' + countSObjectCreated,
+                'Imposto_Custo__c' => 1 + countSObjectCreated,
+                'Status__c' => 'Aprovado'
+            };
+        }
+    }
 } 
