@@ -56,4 +56,12 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+
+    public class CentroDeDistribuicaoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Centro de Distribuição ' + countSObjectCreated
+            };
+        }
+    }
 } 
