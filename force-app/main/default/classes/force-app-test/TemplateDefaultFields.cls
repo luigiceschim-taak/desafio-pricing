@@ -83,4 +83,11 @@ public with sharing class TemplateDefaultFields {
             };
         }
     }
+    public class HierarquiaProdutoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+            return new Map<String, Object>{
+                'Name' => 'Hierarquia de Produto ' + countSObjectCreated
+            };
+        }
+    }
 } 
