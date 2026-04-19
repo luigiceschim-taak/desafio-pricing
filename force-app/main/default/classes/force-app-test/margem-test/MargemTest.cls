@@ -129,4 +129,33 @@ private class MargemTest {
             System.assert(e4.getMessage().contains('REQUIRED_FIELD_MISSING'));
         }
     }
+
+    @isTest
+    static void shouldCoverMargemIdCheckOnUpdate() {
+        // 1. Buscando os dados que o seu @testSetup já criou
+        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1];
+        Account conta = [SELECT Id FROM Account LIMIT 1];
+        Product2 produto = [SELECT Id FROM Product2 LIMIT 1];
+        Centro_de_Distribuicao__c cd = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+
+        Margem__c margem = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c(
+            Cidade__c = cidade.Id,
+            Conta__c = conta.Id,
+            Produto__c = produto.Id,
+            Centro_Distribuicao__c = cd.Id
+        ));
+        insert margem;
+        System.assertNotEquals(null, margem.Id, 'A margem deve ser inserida com sucesso.');
+
+        Test.startTest();
+        try {
+            
+            update margem; 
+            
+            System.assert(true, 'A atualização deve ocorrer sem disparar erro de duplicidade.');
+        } catch (Exception e) {
+            System.assert(false, 'A Trigger barrou o próprio registro indevidamente. Erro: ' + e.getMessage());
+        }
+        Test.stopTest();
+    }
 }
