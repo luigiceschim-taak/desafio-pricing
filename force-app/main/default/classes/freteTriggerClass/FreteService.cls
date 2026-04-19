@@ -1,7 +1,5 @@
 public with sharing class FreteService {
-    public FreteService() {
-
-    }
+  
 
     public static void validarDuplicidadeFrete(List<Frete__c> fretes){
         // Implementar lógica de validação de duplicidade similar ao exemplo do ImpostoHandler

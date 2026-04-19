@@ -1,7 +1,4 @@
 public with sharing class ContextoImposto {
-    public ContextoImposto() {
-
-    }
     public Id pId;   // Produto
     public Id cdId;  // Centro de Distribuição 
     public Id estId; // Estado

@@ -11,7 +11,6 @@ public class OrderItemHandler extends TriggerHandler {
         resgatarImposto((List<OrderItem>) Trigger.new);
         resgatarMargem((List<OrderItem>) Trigger.new);
         custoDeProd((List<OrderItem>) Trigger.new);
-
     }
 
     public override void beforeUpdate(){
@@ -66,12 +65,11 @@ public class OrderItemHandler extends TriggerHandler {
 
         // Executa as operações no banco com Bypass para evitar loop
         if (!paraAtualizar.isEmpty() || !paraDeletar.isEmpty()) {
-            OrderItemHandler.bypass('OrderItemHandler');
             
             if (!paraAtualizar.isEmpty()) update paraAtualizar;
             if (!paraDeletar.isEmpty()) delete paraDeletar;
             
-            OrderItemHandler.clearBypass('OrderItemHandler');
+            
             
         }
     }

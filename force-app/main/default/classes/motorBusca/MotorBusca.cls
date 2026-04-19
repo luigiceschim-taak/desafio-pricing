@@ -1,7 +1,4 @@
 public with sharing class MotorBusca {
-    public MotorBusca() {
-
-    }
 
     public static void resgatarValorFrete(List<OrderItem> novosItens) {
         // 1. Coleta de IDs (Bulkify)

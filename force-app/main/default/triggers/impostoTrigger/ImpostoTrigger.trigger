@@ -1,4 +1,4 @@
-trigger ImpostoTrigger on Imposto__c (before insert, after insert, before update, after update) {
+trigger ImpostoTrigger on Imposto__c (before insert, before update) {
     new ImpostoHandler().run();
 
 }

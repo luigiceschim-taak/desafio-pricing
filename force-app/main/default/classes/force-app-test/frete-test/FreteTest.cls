@@ -24,6 +24,10 @@ private class FreteTest {
 
     @testSetup
     static void setupTestData() {
+
+        Id pricebookId = Test.getStandardPricebookId();
+        update new Pricebook2(Id = pricebookId, IsActive = true);
+        
         Centro_de_Distribuicao__c centro = (Centro_de_Distribuicao__c) TestFactorySObject.getInstance().createSObject(new Centro_de_Distribuicao__c());
         insert centro;
 
@@ -108,6 +112,96 @@ private class FreteTest {
             System.assert(false, 'Não deveria permitir todos juntos');
         } catch (DmlException e) {
             System.assert(e.getMessage() .contains('FIELD_CUSTOM_VALIDATION_EXCEPTION'), 'Mensagem de erro deve mencionar XOR');
+        }
+    }
+    @isTest
+    static void shouldValidateDuplicidadeOnBeforeUpdate() {
+        // 1. Buscar os dados base do Setup
+        Centro_de_Distribuicao__c centro = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1]; 
+        Cidade__c cidade1 = [SELECT Id FROM Cidade__c LIMIT 1];
+
+        // 2. Criar uma segunda Cidade apenas para este teste ter uma combinação diferente
+        Cidade__c cidade2 = (Cidade__c) TestFactorySObject.getInstance().createSObject(new Cidade__c());
+        cidade2.Estado__c = estado.Id;
+        insert cidade2;
+
+        // 3. Inserir Frete A (Combinação: Produto + Centro + Cidade 1)
+        Frete__c freteA = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        freteA.Produto__c = product.Id;
+        freteA.Centro_Distribuicao__c = centro.Id;
+        freteA.Cidade__c = cidade1.Id;
+        // freteA.Valor__c = 100.00; // Descomente e ajuste se for obrigatório
+        insert freteA;
+
+        // 4. Inserir Frete B (Combinação: Produto + Centro + Cidade 2)
+        Frete__c freteB = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        freteB.Produto__c = product.Id;
+        freteB.Centro_Distribuicao__c = centro.Id;
+        freteB.Cidade__c = cidade2.Id;
+        insert freteB;
+
+        Test.startTest();
+
+        // ==========================================
+        // TESTE 1: A Auto-Atualização (Deve Passar)
+        // ==========================================
+        try {
+            
+            update freteA; 
+            System.assert(true, 'Sucesso: A trigger permitiu a edição e ignorou o próprio ID na validação de duplicidade.');
+        } catch (Exception e) {
+            System.assert(false, 'A trigger barrou a edição do próprio registro. Verifique a exclusão do ID na SOQL. Erro: ' + e.getMessage());
+        }
+
+        // ==========================================
+        // TESTE 2: A Colisão de Duplicidade (Deve Falhar)
+        // ==========================================
+        
+        freteB.Cidade__c = cidade1.Id; 
+        
+        try {
+            update freteB;
+            System.assert(false, 'O sistema deveria ter bloqueado a atualização, pois a nova combinação já existe no Frete A.');
+        } catch (DmlException e) {
+            // IMPORTANTE: Ajuste o texto abaixo para a mensagem de erro exata que a sua Trigger/Classe joga na tela!
+            String mensagemEsperada = 'Já existe um registro'; 
+            System.assert(e.getMessage().contains(mensagemEsperada), 
+                'Erro inesperado ou mensagem de validação incorreta. Mensagem recebida: ' + e.getMessage());
+        }
+
+        Test.stopTest();
+    }
+
+    @isTest
+    static void shouldFailWhenDuplicateInsertInTheSameLote(){
+        // 1. Buscar os dados base do Setup
+        Centro_de_Distribuicao__c centro = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
+        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1];
+
+        // 2. Criar dois registros de Frete com a mesma combinação (Produto + Centro + Cidade)
+        Frete__c frete1 = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        frete1.Produto__c = product.Id;
+        frete1.Centro_Distribuicao__c = centro.Id;
+        frete1.Cidade__c = cidade.Id;
+
+        Frete__c frete2 = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        frete2.Produto__c = product.Id;
+        frete2.Centro_Distribuicao__c = centro.Id;
+        frete2.Cidade__c = cidade.Id;
+
+        List<Frete__c> fretesParaInserir = new List<Frete__c>{frete1, frete2};
+
+        try {
+            insert fretesParaInserir;
+            System.assert(false, 'Deveria ter lançado uma exceção de duplicidade, mas não lançou.');
+        } catch (DmlException e) {
+            // Esperamos um erro de duplicidade, então o teste passa se entrarmos aqui
+            String mensagemEsperada = 'Registro duplicado no mesmo lote'; // Ajuste para a mensagem exata da sua validação
+            System.assert(e.getMessage().contains(mensagemEsperada), 
+                'Erro inesperado ou mensagem de validação incorreta. Mensagem recebida: ' + e.getMessage());
         }
     }
 

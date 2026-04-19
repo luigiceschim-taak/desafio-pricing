@@ -1,9 +1,5 @@
 public with sharing class PedidoService {
-    public PedidoService() {
-
-    }
-
-
+    
     public static void naoPermitirEdicaoPedido(List<Order> novosPedidos, Map<Id, Order> pedidosAntigos){
         // Impede edição de pedidos (Order)
        for(Order o : novosPedidos) {
@@ -51,8 +47,9 @@ public with sharing class PedidoService {
             system.debug('Executando motores de busca em lote');
             MotorBusca.resgatarValorFrete(itensParaAtualizar);
             MotorBusca.resgatarValorImposto(itensParaAtualizar);
+            MotorBusca.resgatarMargem(itensParaAtualizar);
 
-            // 4. DML único para atualizar todos os registros de uma vez
+            
             update itensParaAtualizar;
         }
     }

@@ -1,7 +1,4 @@
 public with sharing class MargemService {
-    public MargemService() {
-
-    }
 
     public static void validarDuplicidadeMargem(List<Margem__c> margens){
         Set<String> chavesNovas = new Set<String>();

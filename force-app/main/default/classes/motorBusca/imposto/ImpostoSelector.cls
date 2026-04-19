@@ -4,16 +4,16 @@ public class ImpostoSelector {
 
         // A Query Única
         // O CD aqui serve apenas para restringir o universo de busca
-        List<Imposto__c> impostos = [
+        List<Imposto__c> impostos =[
             SELECT Id, Imposto_Custo__c, Product__c, Estado__c, Centro_Distribuicao__c
             FROM Imposto__c
             WHERE Status__c = 'Aprovado'
             AND Centro_Distribuicao__c IN :cdsIds 
-            AND Product__c IN :produtosIds  
-            
-            
-        ];
-        System.debug(impostos + ' | ' + 'impostos encontrados para os cds');
+            AND Product__c IN :produtosIds];
+        
+            System.debug('------------------------------------------------');
+            System.debug('Impostos encontrados (IMPOSTO SELECTOR): ' + impostos.size());
+            System.debug('------------------------------------------------');
 
 
         // Montagem da Chave Composta
@@ -21,9 +21,7 @@ public class ImpostoSelector {
             String chaveMestra = String.valueOf(i.Product__c) + 
                          String.valueOf(i.Centro_Distribuicao__c) + 
                          String.valueOf(i.Estado__c);
-    
-        mapaRegras.put(chaveMestra, i);
-            
+            mapaRegras.put(chaveMestra, i);    
         }
         return mapaRegras;
     }

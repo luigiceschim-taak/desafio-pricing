@@ -1,7 +1,4 @@
 public with sharing class ImpostoService {
-    public ImpostoService() {
-
-    }
 
     public static void validarDuplicidadeImposto(List<Imposto__c> impostos){
         Set<String> chavesNovas = new Set<String>();

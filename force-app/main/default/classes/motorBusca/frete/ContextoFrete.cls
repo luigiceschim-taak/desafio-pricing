@@ -1,7 +1,5 @@
 public with sharing class ContextoFrete {
-    public ContextoFrete() {
-
-    }
+    
     public Id pId;   // Produto
     public Id hId;   // Hierarquia
     public Id cdId;  // Centro de Distribuição 

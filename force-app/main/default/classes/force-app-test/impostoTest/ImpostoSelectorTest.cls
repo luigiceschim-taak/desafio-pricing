@@ -20,13 +20,15 @@
  * See the Apex Language Reference for more information about Testing and Code Coverage.
  */
 @isTest
-private class ImpostoTest {
+private class ImpostoSelectorTest {
+
     @testSetup
     static void setupTestData() {
 
         Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
+        
         Centro_de_Distribuicao__c centro = (Centro_de_Distribuicao__c) TestFactorySObject.getInstance().createSObject(new Centro_de_Distribuicao__c());
         insert centro;
 
@@ -42,33 +44,55 @@ private class ImpostoTest {
 
         Estado__c estado = (Estado__c) TestFactorySObject.getInstance().createSObject(new Estado__c());
         estado.Pais__c = pais.Id;
-        insert estado;
+        insert estado;  
+    }
+
+
+    @isTest
+    static void shouldRetrieveImposto() {
+
+        Set<Id> produtosIds = new Set<Id>();
+        Set<Id> locaisIds = new Set<Id>();
+        Set<Id> cdsIds = new Set<Id>();
+
+        
+
+        Centro_de_Distribuicao__c centro = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
 
         Imposto__c imposto = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
         imposto.Centro_Distribuicao__c = centro.Id;
         imposto.Product__c = product.Id;
         imposto.Estado__c = estado.Id;
         insert imposto;
-    }
 
 
-    @isTest
-    static void shouldCreateImposto() {
+        Imposto__c impostoC = [SELECT Id, Name, Centro_Distribuicao__c, Product__c, Estado__c,Imposto_Custo__c  FROM Imposto__c LIMIT 1];
 
-        Centro_de_Distribuicao__c centro = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Product2 product = [SELECT Id FROM Product2 LIMIT 1];
-        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
 
-        Imposto__c imposto = [SELECT Id, Name, Centro_Distribuicao__c, Product__c, Estado__c,Imposto_Custo__c  FROM Imposto__c LIMIT 1];
+        for(Centro_de_Distribuicao__c cd : [SELECT Id FROM Centro_de_Distribuicao__c]) {
+            System.debug('Centro de Distribuição: ' + cd.Id);
+            cdsIds.add(cd.Id);
+            
+        }
+        for(Product2 p : [SELECT Id FROM Product2]) {
+            System.debug('Produto: ' + p.Id);
+            produtosIds.add(p.Id);
+        }
+        for(Estado__c e : [SELECT Id FROM Estado__c]) {
+            System.debug('Estado: ' + e.Id);
+            locaisIds.add(e.Id);
+        }
 
-        Assert.isNotNull(imposto.Id, 'Imposto should have been created in test setup');
-        Assert.isNotNull(imposto.Name, 'Imposto should have a Name field populated');
-        Assert.isNotNull(imposto.Imposto_Custo__c, 'Imposto should have an Imposto_Custo__c field populated');
+        
 
-        Assert.isTrue(imposto.Imposto_Custo__c > 0);
+        Map<String, Imposto__c> impostos = ImpostoSelector.getMapaRegras(produtosIds, locaisIds, cdsIds);
 
-        Assert.areEqual(imposto.Centro_Distribuicao__c, centro.Id, 'Imposto should be associated with the correct Centro de Distribuição');
-        Assert.areEqual(imposto.Product__c, product.Id, 'Imposto should be associated with the correct Product');
-        Assert.areEqual(imposto.Estado__c, estado.Id, 'Imposto should be associated with the correct Estado');
+        String chaveMestra = String.valueOf(imposto.Product__c) + 
+                         String.valueOf(imposto.Centro_Distribuicao__c) + 
+                         String.valueOf(imposto.Estado__c);
+
+        Assert.isTrue(impostos.containsKey(chaveMestra));
     }
 }

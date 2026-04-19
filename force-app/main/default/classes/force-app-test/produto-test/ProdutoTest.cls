@@ -24,6 +24,9 @@ private class ProdutoTest {
 
     @TestSetup
     static void makeData(){
+
+         Id pricebookId = Test.getStandardPricebookId();
+        update new Pricebook2(Id = pricebookId, IsActive = true);
         Hierarquia_Produto__c hdp = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
         insert hdp;
     }

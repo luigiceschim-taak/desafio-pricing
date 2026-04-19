@@ -1,7 +1,4 @@
 public with sharing class ContextoMargem {
-    public ContextoMargem() {
-
-    }
     public Id pId;   // Produto
     public Id hId;   // Hierarquia produto
     public Id cntId; // conta
