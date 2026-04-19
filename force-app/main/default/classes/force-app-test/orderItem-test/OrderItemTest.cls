@@ -128,7 +128,7 @@ private class OrderItemTest {
     }
 
     @isTest
-    static void shouldPopulateOrderItemWithMergin() {
+    static void shouldPopulateOrderItemWithMerginAndValidateQuantity() {
         // 1. Busca os dados do Setup (As regras de frete/imposto/margem já foram criadas no @TestSetup)
         Account conta = [SELECT Id FROM Account LIMIT 1];
         Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
@@ -162,17 +162,16 @@ private class OrderItemTest {
             UnitPrice = pbe.UnitPrice
         );
 
-        // 4. A MÁGICA ACONTECE AQUI
+        
         Test.startTest();
         // Ao dar o insert, o Salesforce vai rodar a sua Trigger de OrderItem.
         // É a sua Trigger que vai chamar o MotorBusca e preencher os campos automaticamente!
         insert item; 
 
-        insert item2; // Esse segundo insert deve acionar a lógica de merge e atualizar o primeiro item ao invés de criar um novo
+        insert item2; 
         Test.stopTest();
 
-        // 5. Validações Finais (A Prova do Crime)
-        // Buscamos o item recém-inserido no banco de dados para ver se a Trigger fez o trabalho dela
+        
         OrderItem itemAtualizado = [
             SELECT Id, Valor_Frete__c, Porcentagem_Imposto__c, Porcentagem_Margem__c, Quantity 
             FROM OrderItem 
@@ -185,6 +184,80 @@ private class OrderItemTest {
         Assert.areEqual(30.00, itemAtualizado.Porcentagem_Margem__c, 'O Trigger falhou em acionar o Motor de Margem na criação do item.');
         Assert.areEqual(4, itemAtualizado.Quantity, 'A lógica de merge falhou. A quantidade do primeiro item deveria ter sido atualizada para 4.');
     }
+
+    @isTest
+    static void shouldFailWhenUpdateStatusOfOrderIsActive() {
+        // 1. Busca os dados do Setup (As regras de frete/imposto/margem já foram criadas no @TestSetup)
+        Account conta = [SELECT Id FROM Account LIMIT 1];
+        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
+        Centro_de_Distribuicao__c cd = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Condicao_Pagamento__c condPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Product2 produto = [SELECT Id FROM Product2 LIMIT 1];
+        PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :produto.Id LIMIT 1];
+
+        // 2. Criando o Pedido (Pai)
+        Order pedido = (Order) TestFactorySObject.getInstance().createSObject(new Order());
+        pedido.AccountId = conta.Id;
+        pedido.Endereco__c = endereco.Id;
+        pedido.Centro_Distribuicao__c = cd.Id;
+        pedido.Condicao_Pagamento__c = condPagamento.Id; 
+        pedido.Pricebook2Id = Test.getStandardPricebookId();
+        pedido.Status = 'Rascunho';
+        insert pedido;
+
+        // 3. Preparando o Item do Pedido
+        OrderItem item = new OrderItem(
+            OrderId = pedido.Id,
+            PricebookEntryId = pbe.Id,
+            Quantity = 1,
+            UnitPrice = pbe.UnitPrice
+        );
+
+      
+
+        
+        Test.startTest();
+        // Ao dar o insert, o Salesforce vai rodar a sua Trigger de OrderItem.
+        // É a sua Trigger que vai chamar o MotorBusca e preencher os campos automaticamente!
+        insert item; 
+
+        Order pedidoAtivo = [SELECT Id, Status FROM Order WHERE Id = :pedido.Id LIMIT 1];
+            pedidoAtivo.Status = 'Ativo';
+            update pedidoAtivo;
+
+        try {
+            
+            
+            OrderItem itemPedidoTeste = [SELECT Id, Quantity FROM OrderItem WHERE Id = :item.Id LIMIT 1];
+            itemPedidoTeste.Quantity = 10;
+            update itemPedidoTeste;
+
+            Assert.fail('O sistema deveria ter lançado um DmlException por causa da tentativa de atualizar um item de pedido ativo.');
+
+            
+            
+        } catch (DmlException e) {
+            // Validamos se a mensagem de erro é exatamente a que está no seu código
+            Assert.isTrue(e.getMessage().contains('Erro: Itens de um pedido ativo não podem ser alterados'), 'Mensagem de erro incorreta: ' + e.getMessage());
+            
+        }
+
+        Test.stopTest();
+
+        
+        OrderItem itemNaoAtualizado = [
+            SELECT Id, Valor_Frete__c, Porcentagem_Imposto__c, Porcentagem_Margem__c, Quantity 
+            FROM OrderItem 
+            WHERE Id = :item.Id
+        ];
+
+        // Comparamos o resultado com os valores que configuramos nas regras lá no @TestSetup
+        Assert.areEqual(150.00, itemNaoAtualizado.Valor_Frete__c, 'O Trigger falhou em acionar o Motor de Frete na criação do item.');
+        Assert.areEqual(15.00, itemNaoAtualizado.Porcentagem_Imposto__c, 'O Trigger falhou em acionar o Motor de Imposto na criação do item.');
+        Assert.areEqual(30.00, itemNaoAtualizado.Porcentagem_Margem__c, 'O Trigger falhou em acionar o Motor de Margem na criação do item.');
+        Assert.areEqual(1, itemNaoAtualizado.Quantity, 'A lógica de merge falhou. A quantidade do primeiro item deveria ter sido atualizada para 4.');
+    }
+
 
     private class HandlerMock extends TriggerHandler {
         
