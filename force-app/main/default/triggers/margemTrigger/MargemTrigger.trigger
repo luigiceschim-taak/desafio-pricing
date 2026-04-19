@@ -1,4 +1,4 @@
-trigger MargemTrigger on Margem__c (before insert, after insert, before update, after update) {
+trigger MargemTrigger on Margem__c (before insert, before update) {
     new MargemHandler().run();
     }
 
