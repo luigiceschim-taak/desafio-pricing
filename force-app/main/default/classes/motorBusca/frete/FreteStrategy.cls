@@ -7,9 +7,7 @@ public abstract class FreteStrategy {
         if (alvoId == null) return null;
         String aId = String.valueOf(alvoId);
 
-        // 1. Tenta por Centro de Distribuição (Se o contexto tiver)
-        if (ctx.cdId != null && mapaRegras.containsKey(aId + ctx.cdId)) 
-            return mapaRegras.get(aId + ctx.cdId);
+       
 
         // 1. Tenta por CIDADE
         if (ctx.cidId != null) {
