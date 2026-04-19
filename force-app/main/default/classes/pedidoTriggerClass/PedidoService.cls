@@ -16,7 +16,7 @@ public with sharing class PedidoService {
 
         for(Order o : pedidos) {
             Order oldOrder = pedidosAntigos.get(o.Id);
-            if (oldOrder != null && oldOrder.Status == 'ATIVO') {
+            if (oldOrder != null && oldOrder.Status == 'Ativo') {
                 o.addError('Pedidos com status "ATIVO" não podem ser editados.');
             }
         }
@@ -37,7 +37,7 @@ public with sharing class PedidoService {
 
         // 2. Query única para buscar TODOS os itens dos pedidos afetados
         List<OrderItem> itensParaAtualizar = [
-            SELECT Id, Product2Id, OrderId 
+            SELECT Id, Product2Id, Product2.Id,Product2.Hierarquia_Produto__c, OrderId 
             FROM OrderItem 
             WHERE OrderId IN :pedidosComAlteracaoIds
         ];

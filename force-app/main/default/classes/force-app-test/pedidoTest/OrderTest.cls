@@ -61,10 +61,7 @@ private class OrderTest {
         Endereco__c endereco = (Endereco__c) TestFactorySObject.getInstance().createSObject(new Endereco__c());
         endereco.Cidade__c = cidade.Id;
         endereco.Account__c = account.Id;
-        insert endereco;  
-
-
-        
+        insert endereco;    
     }
 
     @isTest
@@ -97,11 +94,98 @@ private class OrderTest {
             System.assert(!orders.isEmpty(), 'No orders were created in the test setup.');
             System.assertEquals('Rascunho', orders[0].Status, 'The order status should be Rascunho after insertion.');
     }
+
+   @isTest
+    static void shouldPreventUpdateWhenStatusIsAtivo() {
+        // 1. OBRIGATÓRIO: Inicializar o Pricebook Padrão ANTES de tudo
+        Id standardPbId = Test.getStandardPricebookId();
+        update new Pricebook2(Id = standardPbId, IsActive = true);
+        
+        // 2. Setup de Dados Base
+        Hierarquia_Produto__c hierarquia = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
+        insert hierarquia;
+
+        // 3. Inserir o Produto
+        Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
+        product.Hierarquia_Produto__c = hierarquia.Id;
+        insert product;  
+
+        // 4. Buscar o PricebookEntry que a Trigger acabou de criar
+        PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :product.Id LIMIT 1];
+
+        // 5. Setup de Relacionamentos do Pedido
+        Account account = [SELECT Id FROM Account LIMIT 1];
+        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
+        Centro_de_Distribuicao__c cd = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Condicao_Pagamento__c condicao = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1];
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
+        
+        // ==========================================
+        // O SEGREDO QUE FALTAVA: CRIAR AS REGRAS AQUI
+        // ==========================================
+        Frete__c regraFrete = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        regraFrete.Produto__c = product.Id;
+        regraFrete.Centro_Distribuicao__c = cd.Id;
+        regraFrete.Cidade__c = cidade.Id;
+        regraFrete.Valor__c = 100.00;
+        insert regraFrete;
+
+        Imposto__c regraImposto = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
+        regraImposto.Product__c = product.Id;
+        regraImposto.Centro_Distribuicao__c = cd.Id;
+        regraImposto.Estado__c = estado.Id;
+        regraImposto.Imposto_Custo__c = 15.00;
+        insert regraImposto;
+
+        Margem__c regraMargem = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
+        regraMargem.Produto__c = product.Id;
+        regraMargem.Conta__c = account.Id;
+        regraMargem.Centro_Distribuicao__c = cd.Id;
+        regraMargem.Cidade__c = cidade.Id;
+        regraMargem.Valor__c = 30.00;
+        insert regraMargem;
+
+        // 6. Criar o Pedido
+        Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
+        order.AccountId = account.Id;
+        order.Pricebook2Id = standardPbId; 
+        order.Endereco__c = endereco.Id;
+        order.Centro_Distribuicao__c = cd.Id;
+        order.Condicao_Pagamento__c = condicao.Id;
+        order.Status = 'Rascunho';
+        insert order;
+
+        // 7. Criar o Item do Pedido (Agora o motor acha as regras e não quebra!)
+        OrderItem orderItem = new OrderItem(
+            OrderId = order.Id,
+            PricebookEntryId = pbe.Id, 
+            Quantity = 1,
+            UnitPrice = pbe.UnitPrice != null ? pbe.UnitPrice : 100 // Prevenção caso o PBE venha nulo
+        );
+        insert orderItem;
+
+        // 8. Testar o bloqueio do status Ativo
+        order.Status = 'Ativo';
+        update order;
+
+        // A Invasão!
+        order.Description = 'Tentativa de edição bloqueada';
+        
+        Test.startTest();
+        try {
+            update order;
+            Assert.fail('Deveria ter bloqueado a edição de pedido Ativo');
+        } catch (DmlException e) {
+            Assert.isTrue(e.getMessage().contains('Pedidos com status "ATIVO" não podem ser editados.'));
+        }
+        Test.stopTest();
+    }
     
     @isTest
     static void shouldNotAllowEditingOrderWhenActive() {
 
-            Id pricebookId = Test.getStandardPricebookId();
+        Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
         Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
@@ -263,6 +347,123 @@ private class OrderTest {
         }
         Test.stopTest();
     }
+
+    @isTest
+    static void shouldTriggerMotoresDeBuscaWhenCdChanges() {
+        // 1. SETUP: Criamos os dados base necessários
+        Id pricebookId = Test.getStandardPricebookId();
+        update new Pricebook2(Id = pricebookId, IsActive = true);
+
+        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
+        insert hierarquiaProduto;
+
+        Product2 produto = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
+        produto.Hierarquia_Produto__c = hierarquiaProduto.Id;
+        insert produto;  
+
+        PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :produto.Id LIMIT 1];
+
+        Account conta = [SELECT Id FROM Account LIMIT 1];
+
+        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
+
+        // Criamos DOIS CDs para poder simular a troca
+        Centro_de_Distribuicao__c cdOriginal = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
+        Condicao_Pagamento__c condicaoPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        
+        Centro_de_Distribuicao__c cdNovo = (Centro_de_Distribuicao__c) TestFactorySObject.getInstance().createSObject(new Centro_de_Distribuicao__c());
+        insert cdNovo;
+
+       // ==========================================
+        // PREPARANDO AS REGRAS PARA OS DOIS CDs
+        // ==========================================
+        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1]; 
+        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
+
+        // 1. Regras para o CD ORIGINAL (Permite que o OrderItem seja inserido)
+        Frete__c freteOriginal = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        freteOriginal.Produto__c = produto.Id;
+        freteOriginal.Centro_Distribuicao__c = cdOriginal.Id; 
+        freteOriginal.Cidade__c = cidade.Id;
+        freteOriginal.Status__c = 'Aprovado';
+        freteOriginal.Valor__c = 50.00; // Valor antigo
+        insert freteOriginal;
+
+        Imposto__c impostoOriginal = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
+        impostoOriginal.Product__c = produto.Id;
+        impostoOriginal.Centro_Distribuicao__c = cdOriginal.Id;
+        impostoOriginal.Estado__c = estado.Id;
+        impostoOriginal.Imposto_Custo__c = 10.00; // Valor antigo
+        insert impostoOriginal;
+
+        Margem__c margemOriginal = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
+        margemOriginal.Produto__c = produto.Id;
+        margemOriginal.Conta__c = conta.Id;
+        margemOriginal.Centro_Distribuicao__c = cdOriginal.Id;
+        margemOriginal.Status__c = 'Aprovado';
+        margemOriginal.Valor__c = 20.00; // Valor antigo
+        margemOriginal.Estado__c = estado.Id;
+        insert margemOriginal;
+
+        // 2. Regras para o CD NOVO (Permite que o update recalcule os valores)
+        Frete__c freteNovo = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
+        freteNovo.Produto__c = produto.Id;
+        freteNovo.Centro_Distribuicao__c = cdNovo.Id; 
+        freteNovo.Cidade__c = cidade.Id;
+        freteNovo.Status__c = 'Aprovado';
+        freteNovo.Valor__c = 100.00; // Valor NOVO
+        insert freteNovo;
+
+        Imposto__c impostoNovo = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
+        impostoNovo.Product__c = produto.Id;
+        impostoNovo.Centro_Distribuicao__c = cdNovo.Id;
+        impostoNovo.Estado__c = estado.Id;
+        impostoNovo.Imposto_Custo__c = 15.00; // Valor NOVO
+        insert impostoNovo;
+
+        Margem__c margemNovo = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
+        margemNovo.Produto__c = produto.Id;
+        margemNovo.Conta__c = conta.Id;
+        margemNovo.Centro_Distribuicao__c = cdNovo.Id;
+        margemNovo.Status__c = 'Aprovado';
+        margemNovo.Valor__c = 30.00; // Valor NOVO
+        margemNovo.Estado__c = estado.Id;
+        insert margemNovo;
+
+
+        // 2. Criamos o Pedido com o CD Original
+        Order pedido = (Order) TestFactorySObject.getInstance().createSObject(new Order());
+        pedido.AccountId = conta.Id;
+        pedido.Endereco__c = endereco.Id;
+        pedido.Centro_Distribuicao__c = cdOriginal.Id;
+        pedido.Pricebook2Id = pricebookId;
+        pedido.Status = 'Rascunho';
+        pedido.Condicao_Pagamento__c = condicaoPagamento.Id;
+        insert pedido;
+
+        // 3. Criamos o Item do Pedido para que a Query encontre algo e chame os Motores
+        OrderItem item = new OrderItem(
+            OrderId = pedido.Id,
+            PricebookEntryId = pbe.Id,
+            Quantity = 1,
+            UnitPrice = pbe.UnitPrice
+        );
+        insert item;
+
+        // 4. A HORA DA VERDADE: Alteramos o CD para disparar a lógica
+        pedido.Centro_Distribuicao__c = cdNovo.Id;
+
+        Test.startTest();
+        // O Update aciona a sua Trigger, que por sua vez chama o atualizarOrderItens()
+        update pedido;
+        Test.stopTest();
+
+        // 5. VALIDAÇÃO
+        Order pedidoAtualizado = [SELECT Centro_Distribuicao__c FROM Order WHERE Id = :pedido.Id];
+        Assert.areEqual(cdNovo.Id, pedidoAtualizado.Centro_Distribuicao__c, 'O CD deveria ter sido atualizado com sucesso, acionando os motores em lote.');
+    }
+
+
 
     // ====================================================================
     // INNER CLASS NÍVEL 1: Apenas uma classe de profundidade permitida
