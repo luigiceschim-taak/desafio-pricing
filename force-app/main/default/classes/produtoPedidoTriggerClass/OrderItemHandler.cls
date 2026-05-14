@@ -5,19 +5,13 @@ public class OrderItemHandler extends TriggerHandler {
     }
 
     public override void beforeInsert(){
-     
-
-        resgatarFrete((List<OrderItem>) Trigger.new);
-        resgatarImposto((List<OrderItem>) Trigger.new);
-        resgatarMargem((List<OrderItem>) Trigger.new);
+        PricingFacade.calcularPricing((List<OrderItem>) Trigger.new);
         custoDeProd((List<OrderItem>) Trigger.new);
     }
 
     public override void beforeUpdate(){
         validarStatusPedido((List<OrderItem>) Trigger.new);
-        resgatarFrete((List<OrderItem>) Trigger.new);
-        resgatarImposto((List<OrderItem>) Trigger.new);
-        resgatarMargem((List<OrderItem>) Trigger.new);
+        PricingFacade.calcularPricing((List<OrderItem>) Trigger.new);
     }
 
     private void mesclarItensExistentes(List<OrderItem> novosItens) {
@@ -75,19 +69,6 @@ public class OrderItemHandler extends TriggerHandler {
     }
 
     
-    private void ResgatarFrete(List<OrderItem> novosItens){
-        System.debug('Método ResgatarFrete chamado');
-        MotorBusca.resgatarValorFrete(novosItens);
-    }
-    private void ResgatarImposto(List<OrderItem> novosItens){
-        System.debug('Método ResgatarImposto chamado');
-        MotorBusca.resgatarValorImposto(novosItens);
-    }
-    private void resgatarMargem(List<OrderItem> novosItens){
-            System.debug('Método ResgatarMargem chamado');
-            MotorBusca.resgatarMargem(novosItens);
-    }
-
     private void custoDeProd(List<OrderItem> novosItens){
 
             Set<Id> produtosIds = new Set<Id>();
@@ -102,14 +83,14 @@ public class OrderItemHandler extends TriggerHandler {
             if (produtosIds.isEmpty()) return;
 
             Map<Id, Product2> mapaProdutos = new Map<Id,Product2>([
-                SELECT Id, Custo_Producao__c 
-                FROM Product2 
+                SELECT Id, ProductionCost__c
+                FROM Product2
                 WHERE Id IN :produtosIds
-            ]); 
+            ]);
 
             for (OrderItem item : novosItens){
                 if(mapaProdutos.containsKey(item.Product2Id)){
-                    item.Custo_Producao__c = mapaProdutos.get(item.Product2Id).Custo_Producao__c;
+                    item.ProductionCost__c = mapaProdutos.get(item.Product2Id).ProductionCost__c;
                 }
 
             }

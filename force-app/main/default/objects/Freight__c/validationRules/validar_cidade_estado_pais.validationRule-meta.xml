@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>validar_cidade_estado_pais</fullName>
+    <active>true</active>
+    <errorConditionFormula>(
+  IF(ISBLANK(City__c), 0, 1) + 
+  IF(ISBLANK(State__c), 0, 1) + 
+  IF(ISBLANK(Country__c), 0, 1)
+) &lt;&gt; 1</errorConditionFormula>
+    <errorMessage>Erro: Apenas um campo deve ser preenchido, Cidade, Estado ou Pais.</errorMessage>
+</ValidationRule>

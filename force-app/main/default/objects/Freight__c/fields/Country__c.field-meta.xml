@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Country__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Pais</label>
+    <referenceTo>Country__c</referenceTo>
+    <relationshipLabel>Fretes</relationshipLabel>
+    <relationshipName>Freights</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
