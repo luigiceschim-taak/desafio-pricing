@@ -5,7 +5,7 @@ private class ProdutoTriggerHandlerTest {
     // INNER CLASS NÍVEL 1: Apenas uma classe de profundidade permitida
     // Criamos um Mock que herda da sua Handler base para acessar o "super"
     // ====================================================================
-    private class HandlerMock extends ProdutoTriggerHandler {
+    private class HandlerMock extends ProductTriggerHandler {
         
         public void coverVirtualMethods() {
             // O 'super' permite chamar os métodos protected da classe pai

@@ -1,67 +1,38 @@
-/**
- * This class contains unit tests for validating the behavior of Apex classes
- * and triggers.
- *
- * Unit tests are class methods that verify whether a particular piece
- * of code is working properly. Unit test methods take no arguments,
- * commit no data to the database, and are flagged with the testMethod
- * keyword in the method definition.
- *
- * All test methods in an org are executed whenever Apex code is deployed
- * to a production org to confirm correctness, ensure code
- * coverage, and prevent regressions. All Apex classes are
- * required to have at least 75% code coverage in order to be deployed
- * to a production org. In addition, all triggers must have some code coverage.
- * 
- * The @isTest class annotation indicates this class only contains test
- * methods. Classes defined with the @isTest annotation do not count against
- * the org size limit for all Apex scripts.
- *
- * See the Apex Language Reference for more information about Testing and Code Coverage.
- */
 @isTest
 private class OrderTest {
 
     @TestSetup
     static void makeData(){
-        Pais__c pais = (Pais__c) TestFactorySObject.getInstance().createSObject(new Pais__c());
-        insert pais;
+        Country__c country = (Country__c) TestFactorySObject.getInstance().createSObject(new Country__c());
+        insert country;
 
+        State__c state = (State__c) TestFactorySObject.getInstance().createSObject(new State__c());
+        state.Country__c = country.Id;
+        insert state;
 
-        Estado__c estado = (Estado__c) TestFactorySObject.getInstance().createSObject(new Estado__c());
-        estado.Pais__c = pais.Id;
-        insert estado;
+        City__c city = (City__c) TestFactorySObject.getInstance().createSObject(new City__c());
+        city.State__c = state.Id;
+        insert city;
 
-        Cidade__c cidade = (Cidade__c) TestFactorySObject.getInstance().createSObject(new Cidade__c());
-        cidade.Estado__c = estado.Id;
-        insert cidade;
+        DistributionCenter__c dc = (DistributionCenter__c) TestFactorySObject.getInstance().createSObject(new DistributionCenter__c());
+        insert dc;
 
-        Centro_de_Distribuicao__c centroDistribuicao = (Centro_de_Distribuicao__c) TestFactorySObject.getInstance().createSObject(new Centro_de_Distribuicao__c());
-        insert centroDistribuicao;
-
-        Condicao_Pagamento__c condicaoPagamento = (Condicao_Pagamento__c) TestFactorySObject.getInstance().createSObject(new Condicao_Pagamento__c());
-        insert condicaoPagamento;
-
-
-        Grupo_Conta__c grupoConta = (Grupo_Conta__c) TestFactorySObject.getInstance().createSObject(new Grupo_Conta__c());
-        insert grupoConta;
+        AccountGroup__c accountGroup = (AccountGroup__c) TestFactorySObject.getInstance().createSObject(new AccountGroup__c());
+        insert accountGroup;
 
         Account account = (Account) TestFactorySObject.getInstance().createSObject(new Account());
-        account.Grupo_Clientes__c = grupoConta.Id;
-
+        account.AccountGroup__c = accountGroup.Id;
         insert account;
 
         Account newAccount = (Account) TestFactorySObject.getInstance().createSObject(new Account());
-        newAccount.Grupo_Clientes__c = [SELECT Id FROM Grupo_Conta__c LIMIT 1].Id;
+        newAccount.AccountGroup__c = [SELECT Id FROM AccountGroup__c LIMIT 1].Id;
         newAccount.CNPJ__c = '22945724000140';
         insert newAccount;
 
-
-
-        Endereco__c endereco = (Endereco__c) TestFactorySObject.getInstance().createSObject(new Endereco__c());
-        endereco.Cidade__c = cidade.Id;
-        endereco.Account__c = account.Id;
-        insert endereco;    
+        Address__c address = (Address__c) TestFactorySObject.getInstance().createSObject(new Address__c());
+        address.City__c = city.Id;
+        address.Account__c = account.Id;
+        insert address;
     }
 
     @isTest
@@ -69,154 +40,134 @@ private class OrderTest {
         Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
-        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquiaProduto;
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
         Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        product.Hierarquia_Produto__c = hierarquiaProduto.Id;
-        insert product;  
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
         Account account = [SELECT Id FROM Account LIMIT 1];
-        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
-        Centro_de_Distribuicao__c centroDistribuicao = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c condicaoPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Address__c address = [SELECT Id FROM Address__c LIMIT 1];
+        DistributionCenter__c dc = [SELECT Id FROM DistributionCenter__c LIMIT 1];
 
         Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
         order.AccountId = account.Id;
-        order.Endereco__c = endereco.Id;
-        order.Centro_Distribuicao__c = centroDistribuicao.Id;
-        order.Condicao_Pagamento__c = condicaoPagamento.Id; 
+        order.Address__c = address.Id;
+        order.DistributionCenter__c = dc.Id;
         order.Pricebook2Id = pricebookId;
-        
+
         insert order;
 
-            List<Order> orders = [SELECT Id, Status FROM Order];
-            System.assert(!orders.isEmpty(), 'No orders were created in the test setup.');
-            System.assertEquals('Rascunho', orders[0].Status, 'The order status should be Rascunho after insertion.');
+        List<Order> orders = [SELECT Id, Status FROM Order];
+        System.assert(!orders.isEmpty(), 'No orders were created in the test setup.');
+        System.assertEquals('Rascunho', orders[0].Status, 'The order status should be Rascunho after insertion.');
     }
 
-   @isTest
-    static void shouldPreventUpdateWhenStatusIsAtivo() {
-        // 1. OBRIGATÓRIO: Inicializar o Pricebook Padrão ANTES de tudo
+    @isTest
+    static void shouldPreventUpdateWhenStatusIsActive() {
         Id standardPbId = Test.getStandardPricebookId();
         update new Pricebook2(Id = standardPbId, IsActive = true);
-        
-        // 2. Setup de Dados Base
-        Hierarquia_Produto__c hierarquia = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquia;
 
-        // 3. Inserir o Produto
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
+
         Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        product.Hierarquia_Produto__c = hierarquia.Id;
-        insert product;  
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
-        // 4. Buscar o PricebookEntry que a Trigger acabou de criar
         PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :product.Id LIMIT 1];
 
-        // 5. Setup de Relacionamentos do Pedido
         Account account = [SELECT Id FROM Account LIMIT 1];
-        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
-        Centro_de_Distribuicao__c cd = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c condicao = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
-        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1];
-        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
-        
-        // ==========================================
-        // O SEGREDO QUE FALTAVA: CRIAR AS REGRAS AQUI
-        // ==========================================
-        Frete__c regraFrete = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
-        regraFrete.Produto__c = product.Id;
-        regraFrete.Centro_Distribuicao__c = cd.Id;
-        regraFrete.Cidade__c = cidade.Id;
-        regraFrete.Valor__c = 100.00;
-        insert regraFrete;
+        Address__c address = [SELECT Id FROM Address__c LIMIT 1];
+        DistributionCenter__c dc = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        City__c city = [SELECT Id FROM City__c LIMIT 1];
+        State__c state = [SELECT Id FROM State__c LIMIT 1];
 
-        Imposto__c regraImposto = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
-        regraImposto.Product__c = product.Id;
-        regraImposto.Centro_Distribuicao__c = cd.Id;
-        regraImposto.Estado__c = estado.Id;
-        regraImposto.Imposto_Custo__c = 15.00;
-        insert regraImposto;
+        Freight__c freightRule = (Freight__c) TestFactorySObject.getInstance().createSObject(new Freight__c());
+        freightRule.Product__c = product.Id;
+        freightRule.DistributionCenter__c = dc.Id;
+        freightRule.City__c = city.Id;
+        freightRule.Cost__c = 100.00;
+        insert freightRule;
 
-        Margem__c regraMargem = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
-        regraMargem.Produto__c = product.Id;
-        regraMargem.Conta__c = account.Id;
-        regraMargem.Centro_Distribuicao__c = cd.Id;
-        regraMargem.Cidade__c = cidade.Id;
-        regraMargem.Valor__c = 30.00;
-        insert regraMargem;
+        Tax__c taxRule = (Tax__c) TestFactorySObject.getInstance().createSObject(new Tax__c());
+        taxRule.Product__c = product.Id;
+        taxRule.DistributionCenter__c = dc.Id;
+        taxRule.State__c = state.Id;
+        taxRule.TaxCost__c = 15.00;
+        insert taxRule;
 
-        // 6. Criar o Pedido
+        Margin__c marginRule = (Margin__c) TestFactorySObject.getInstance().createSObject(new Margin__c());
+        marginRule.Product__c = product.Id;
+        marginRule.Account__c = account.Id;
+        marginRule.DistributionCenter__c = dc.Id;
+        marginRule.City__c = city.Id;
+        marginRule.Cost__c = 30.00;
+        insert marginRule;
+
         Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
         order.AccountId = account.Id;
-        order.Pricebook2Id = standardPbId; 
-        order.Endereco__c = endereco.Id;
-        order.Centro_Distribuicao__c = cd.Id;
-        order.Condicao_Pagamento__c = condicao.Id;
+        order.Pricebook2Id = standardPbId;
+        order.Address__c = address.Id;
+        order.DistributionCenter__c = dc.Id;
         order.Status = 'Rascunho';
         insert order;
 
-        // 7. Criar o Item do Pedido (Agora o motor acha as regras e não quebra!)
         OrderItem orderItem = new OrderItem(
             OrderId = order.Id,
-            PricebookEntryId = pbe.Id, 
+            PricebookEntryId = pbe.Id,
             Quantity = 1,
-            UnitPrice = pbe.UnitPrice != null ? pbe.UnitPrice : 100 // Prevenção caso o PBE venha nulo
+            UnitPrice = pbe.UnitPrice != null ? pbe.UnitPrice : 100
         );
         insert orderItem;
 
-        // 8. Testar o bloqueio do status Ativo
         order.Status = 'Ativo';
         update order;
 
-        // A Invasão!
-        order.Description = 'Tentativa de edição bloqueada';
-        
+        order.Description = 'Blocked edit attempt';
+
         Test.startTest();
         try {
             update order;
-            Assert.fail('Deveria ter bloqueado a edição de pedido Ativo');
+            Assert.fail('Should have blocked editing an Active order');
         } catch (DmlException e) {
             Assert.isTrue(e.getMessage().contains('Pedidos com status "ATIVO" não podem ser editados.'));
         }
         Test.stopTest();
     }
-    
+
     @isTest
     static void shouldNotAllowEditingOrderWhenActive() {
-
         Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
-        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquiaProduto;
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
         Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        product.Hierarquia_Produto__c = hierarquiaProduto.Id;
-        insert product;  
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
         Account account = [SELECT Id FROM Account LIMIT 1];
-        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
-        Centro_de_Distribuicao__c centroDistribuicao = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c condicaoPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Address__c address = [SELECT Id FROM Address__c LIMIT 1];
+        DistributionCenter__c dc = [SELECT Id FROM DistributionCenter__c LIMIT 1];
 
         Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
         order.AccountId = account.Id;
-        order.Endereco__c = endereco.Id;
-        order.Centro_Distribuicao__c = centroDistribuicao.Id;
-        order.Condicao_Pagamento__c = condicaoPagamento.Id; 
+        order.Address__c = address.Id;
+        order.DistributionCenter__c = dc.Id;
         order.Pricebook2Id = pricebookId;
-        
+
         insert order;
 
         List<Order> orders = [SELECT Id, Status FROM Order];
         Product2 product1 = [SELECT Id FROM Product2 LIMIT 1];
-        
+
         OrderItem orderItem = (OrderItem) TestFactorySObject.getInstance().createSObject(new OrderItem());
         orderItem.Product2Id = product1.Id;
         orderItem.OrderId = orders[0].Id;
-        
-        
+
         System.assert(!orders.isEmpty(), 'No orders were created in the test setup.');
 
         Order orderToUpdate = orders[0];
@@ -238,271 +189,200 @@ private class OrderTest {
 
     @isTest
     static void shouldNotAllowEditingAccount() {
-        // 1. Setup - Use nomes de variáveis claros (plural vs singular)
-
-             Id pricebookId = Test.getStandardPricebookId();
+        Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
-        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquiaProduto;
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
         Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        product.Hierarquia_Produto__c = hierarquiaProduto.Id;
-        insert product;  
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
         Account account = [SELECT Id FROM Account LIMIT 1];
-        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
-        Centro_de_Distribuicao__c centroDistribuicao = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c condicaoPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Address__c address = [SELECT Id FROM Address__c LIMIT 1];
+        DistributionCenter__c dc = [SELECT Id FROM DistributionCenter__c LIMIT 1];
 
         Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
         order.AccountId = account.Id;
-        order.Endereco__c = endereco.Id;
-        order.Centro_Distribuicao__c = centroDistribuicao.Id;
-        order.Condicao_Pagamento__c = condicaoPagamento.Id; 
+        order.Address__c = address.Id;
+        order.DistributionCenter__c = dc.Id;
         order.Pricebook2Id = pricebookId;
-        
-        insert order;
 
+        insert order;
 
         Order existingOrder = [SELECT Id, Status, AccountId FROM Order LIMIT 1];
         Account newAccount = [SELECT Id FROM Account WHERE Id != :existingOrder.AccountId LIMIT 1];
-        
-       
 
-        // 2. Execução do teste
         existingOrder.AccountId = newAccount.Id;
 
         Test.startTest();
         try {
             update existingOrder;
-            // Se chegar aqui, o teste falhou porque deveria ter dado erro
-            Assert.fail('O sistema deveria ter bloqueado a alteração da Conta no Pedido.');
+            Assert.fail('System should have blocked changing the Account on the Order.');
         } catch (DmlException e) {
-            // 3. Verificação (Asserção)
-            // Verifique o texto exato da sua mensagem de erro
-            String expectedMsg = 'Não é permitido alterar a Conta do pedido.'; 
-            Assert.isTrue(e.getMessage().contains(expectedMsg), 
-                'A mensagem de erro esperada não foi encontrada. Erro atual: ' + e.getMessage());
+            String expectedMsg = 'Não é permitido alterar a Conta do pedido.';
+            Assert.isTrue(e.getMessage().contains(expectedMsg),
+                'Expected error message not found. Current error: ' + e.getMessage());
         }
         Test.stopTest();
     }
 
     @isTest
     static void shouldCatchDmlExceptionOnPricebookEntry() {
-        // 1. Pegamos o produto que já foi criado no @TestSetup
-        // Esse produto JÁ TEM um PricebookEntry criado pela sua Trigger
+        Id pricebookId = Test.getStandardPricebookId();
+        update new Pricebook2(Id = pricebookId, IsActive = true);
 
-            Id pricebookId = Test.getStandardPricebookId();
-            update new Pricebook2(Id = pricebookId, IsActive = true);
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
-            Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-            insert hierarquiaProduto;
+        Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
-            Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-            product.Hierarquia_Produto__c = hierarquiaProduto.Id;
-            insert product;  
+        Product2 prod = [SELECT Id, ProductionCost__c FROM Product2 LIMIT 1];
 
-            Product2 prod = [SELECT Id, Custo_Producao__c FROM Product2 LIMIT 1];
-        
-        
         Test.startTest();
-        // 2. Chamamos a Service diretamente, fingindo que é a Trigger
-        // Como o PricebookEntry desse produto já existe, o insert na linha 44 vai dar DUPLICATE_VALUE
-        // O código vai pular direto para o seu catch (DmlException e) e cobrir a linha do System.debug!
-        produtoService.createPriceBookEntry(new List<Product2>{prod});
+        ProductService.createPriceBookEntry(new List<Product2>{prod});
         Test.stopTest();
 
-        // 3. Validação
-        // Como o seu catch apenas dá um System.debug (não lança erro na tela), 
-        // o teste não vai falhar. Nós apenas garantimos que a quantidade de entradas não aumentou.
         List<PricebookEntry> entries = [SELECT Id FROM PricebookEntry WHERE Product2Id = :prod.Id];
-        Assert.areEqual(1, entries.size(), 'A segunda tentativa de inserção deveria ter falhado e caído no catch.');
+        Assert.areEqual(1, entries.size(), 'Second insert attempt should have failed and fallen into the catch.');
     }
 
     @isTest
     static void shouldFailWhenNoStandardPricebookExists() {
-        // 1. Preparamos os dados base (SEM ativar o Standard Pricebook)
-        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquiaProduto;
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
         Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        product.Hierarquia_Produto__c = hierarquiaProduto.Id;
-        
+        product.ProductHierarchy__c = hierarchy.Id;
+
         Test.startTest();
         try {
-            
             insert product;
-            
-            
-            // O Assert.fail força o teste a ficar vermelho para te avisar!
-            Assert.fail('O sistema deveria ter bloqueado a criação do produto por falta de Pricebook.');
-            
+            Assert.fail('System should have blocked product creation due to missing Pricebook.');
         } catch (Exception e) {
-            // 4. Capturamos o erro do addError e validamos se a mensagem é a correta
-            String mensagemEsperada = 'Não foi possível criar o produto: Nenhum Pricebook (Tabela de Preços) ativo foi encontrado no sistema.';
-            
-            Assert.isTrue(e.getMessage().contains(mensagemEsperada), 
-                          'A mensagem de erro foi diferente do esperado. Mensagem recebida: ' + e.getMessage());
+            String expectedMessage = 'Não foi possível criar o produto: Nenhum Pricebook (Tabela de Preços) ativo foi encontrado no sistema.';
+            Assert.isTrue(e.getMessage().contains(expectedMessage),
+                          'Error message was different from expected. Received: ' + e.getMessage());
         }
         Test.stopTest();
     }
 
     @isTest
-    static void shouldTriggerMotoresDeBuscaWhenCdChanges() {
-        // 1. SETUP: Criamos os dados base necessários
+    static void shouldTriggerPricingEnginesWhenDcChanges() {
         Id pricebookId = Test.getStandardPricebookId();
         update new Pricebook2(Id = pricebookId, IsActive = true);
 
-        Hierarquia_Produto__c hierarquiaProduto = (Hierarquia_Produto__c) TestFactorySObject.getInstance().createSObject(new Hierarquia_Produto__c());
-        insert hierarquiaProduto;
+        ProductHierarchy__c hierarchy = (ProductHierarchy__c) TestFactorySObject.getInstance().createSObject(new ProductHierarchy__c());
+        insert hierarchy;
 
-        Product2 produto = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
-        produto.Hierarquia_Produto__c = hierarquiaProduto.Id;
-        insert produto;  
+        Product2 product = (Product2) TestFactorySObject.getInstance().createSObject(new Product2());
+        product.ProductHierarchy__c = hierarchy.Id;
+        insert product;
 
-        PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :produto.Id LIMIT 1];
+        PricebookEntry pbe = [SELECT Id, UnitPrice FROM PricebookEntry WHERE Product2Id = :product.Id LIMIT 1];
 
-        Account conta = [SELECT Id FROM Account LIMIT 1];
+        Account account = [SELECT Id FROM Account LIMIT 1];
+        Address__c address = [SELECT Id FROM Address__c LIMIT 1];
+        DistributionCenter__c dcOriginal = [SELECT Id FROM DistributionCenter__c LIMIT 1];
 
-        Endereco__c endereco = [SELECT Id FROM Endereco__c LIMIT 1];
+        DistributionCenter__c dcNew = (DistributionCenter__c) TestFactorySObject.getInstance().createSObject(new DistributionCenter__c());
+        insert dcNew;
 
-        // Criamos DOIS CDs para poder simular a troca
-        Centro_de_Distribuicao__c cdOriginal = [SELECT Id FROM Centro_de_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c condicaoPagamento = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
-        
-        Centro_de_Distribuicao__c cdNovo = (Centro_de_Distribuicao__c) TestFactorySObject.getInstance().createSObject(new Centro_de_Distribuicao__c());
-        insert cdNovo;
+        City__c city = [SELECT Id FROM City__c LIMIT 1];
+        State__c state = [SELECT Id FROM State__c LIMIT 1];
 
-       // ==========================================
-        // PREPARANDO AS REGRAS PARA OS DOIS CDs
-        // ==========================================
-        Cidade__c cidade = [SELECT Id FROM Cidade__c LIMIT 1]; 
-        Estado__c estado = [SELECT Id FROM Estado__c LIMIT 1];
+        Freight__c freightOriginal = (Freight__c) TestFactorySObject.getInstance().createSObject(new Freight__c());
+        freightOriginal.Product__c = product.Id;
+        freightOriginal.DistributionCenter__c = dcOriginal.Id;
+        freightOriginal.City__c = city.Id;
+        freightOriginal.Status__c = 'Approved';
+        freightOriginal.Cost__c = 50.00;
+        insert freightOriginal;
 
-        // 1. Regras para o CD ORIGINAL (Permite que o OrderItem seja inserido)
-        Frete__c freteOriginal = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
-        freteOriginal.Produto__c = produto.Id;
-        freteOriginal.Centro_Distribuicao__c = cdOriginal.Id; 
-        freteOriginal.Cidade__c = cidade.Id;
-        freteOriginal.Status__c = 'Aprovado';
-        freteOriginal.Valor__c = 50.00; // Valor antigo
-        insert freteOriginal;
+        Tax__c taxOriginal = (Tax__c) TestFactorySObject.getInstance().createSObject(new Tax__c());
+        taxOriginal.Product__c = product.Id;
+        taxOriginal.DistributionCenter__c = dcOriginal.Id;
+        taxOriginal.State__c = state.Id;
+        taxOriginal.TaxCost__c = 10.00;
+        insert taxOriginal;
 
-        Imposto__c impostoOriginal = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
-        impostoOriginal.Product__c = produto.Id;
-        impostoOriginal.Centro_Distribuicao__c = cdOriginal.Id;
-        impostoOriginal.Estado__c = estado.Id;
-        impostoOriginal.Imposto_Custo__c = 10.00; // Valor antigo
-        insert impostoOriginal;
+        Margin__c marginOriginal = (Margin__c) TestFactorySObject.getInstance().createSObject(new Margin__c());
+        marginOriginal.Product__c = product.Id;
+        marginOriginal.Account__c = account.Id;
+        marginOriginal.DistributionCenter__c = dcOriginal.Id;
+        marginOriginal.Status__c = 'Approved';
+        marginOriginal.Cost__c = 20.00;
+        marginOriginal.State__c = state.Id;
+        insert marginOriginal;
 
-        Margem__c margemOriginal = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
-        margemOriginal.Produto__c = produto.Id;
-        margemOriginal.Conta__c = conta.Id;
-        margemOriginal.Centro_Distribuicao__c = cdOriginal.Id;
-        margemOriginal.Status__c = 'Aprovado';
-        margemOriginal.Valor__c = 20.00; // Valor antigo
-        margemOriginal.Estado__c = estado.Id;
-        insert margemOriginal;
+        Freight__c freightNew = (Freight__c) TestFactorySObject.getInstance().createSObject(new Freight__c());
+        freightNew.Product__c = product.Id;
+        freightNew.DistributionCenter__c = dcNew.Id;
+        freightNew.City__c = city.Id;
+        freightNew.Status__c = 'Approved';
+        freightNew.Cost__c = 100.00;
+        insert freightNew;
 
-        // 2. Regras para o CD NOVO (Permite que o update recalcule os valores)
-        Frete__c freteNovo = (Frete__c) TestFactorySObject.getInstance().createSObject(new Frete__c());
-        freteNovo.Produto__c = produto.Id;
-        freteNovo.Centro_Distribuicao__c = cdNovo.Id; 
-        freteNovo.Cidade__c = cidade.Id;
-        freteNovo.Status__c = 'Aprovado';
-        freteNovo.Valor__c = 100.00; // Valor NOVO
-        insert freteNovo;
+        Tax__c taxNew = (Tax__c) TestFactorySObject.getInstance().createSObject(new Tax__c());
+        taxNew.Product__c = product.Id;
+        taxNew.DistributionCenter__c = dcNew.Id;
+        taxNew.State__c = state.Id;
+        taxNew.TaxCost__c = 15.00;
+        insert taxNew;
 
-        Imposto__c impostoNovo = (Imposto__c) TestFactorySObject.getInstance().createSObject(new Imposto__c());
-        impostoNovo.Product__c = produto.Id;
-        impostoNovo.Centro_Distribuicao__c = cdNovo.Id;
-        impostoNovo.Estado__c = estado.Id;
-        impostoNovo.Imposto_Custo__c = 15.00; // Valor NOVO
-        insert impostoNovo;
+        Margin__c marginNew = (Margin__c) TestFactorySObject.getInstance().createSObject(new Margin__c());
+        marginNew.Product__c = product.Id;
+        marginNew.Account__c = account.Id;
+        marginNew.DistributionCenter__c = dcNew.Id;
+        marginNew.Status__c = 'Approved';
+        marginNew.Cost__c = 30.00;
+        marginNew.State__c = state.Id;
+        insert marginNew;
 
-        Margem__c margemNovo = (Margem__c) TestFactorySObject.getInstance().createSObject(new Margem__c());
-        margemNovo.Produto__c = produto.Id;
-        margemNovo.Conta__c = conta.Id;
-        margemNovo.Centro_Distribuicao__c = cdNovo.Id;
-        margemNovo.Status__c = 'Aprovado';
-        margemNovo.Valor__c = 30.00; // Valor NOVO
-        margemNovo.Estado__c = estado.Id;
-        insert margemNovo;
+        Order order = (Order) TestFactorySObject.getInstance().createSObject(new Order());
+        order.AccountId = account.Id;
+        order.Address__c = address.Id;
+        order.DistributionCenter__c = dcOriginal.Id;
+        order.Pricebook2Id = pricebookId;
+        order.Status = 'Rascunho';
+        insert order;
 
-
-        // 2. Criamos o Pedido com o CD Original
-        Order pedido = (Order) TestFactorySObject.getInstance().createSObject(new Order());
-        pedido.AccountId = conta.Id;
-        pedido.Endereco__c = endereco.Id;
-        pedido.Centro_Distribuicao__c = cdOriginal.Id;
-        pedido.Pricebook2Id = pricebookId;
-        pedido.Status = 'Rascunho';
-        pedido.Condicao_Pagamento__c = condicaoPagamento.Id;
-        insert pedido;
-
-        // 3. Criamos o Item do Pedido para que a Query encontre algo e chame os Motores
         OrderItem item = new OrderItem(
-            OrderId = pedido.Id,
+            OrderId = order.Id,
             PricebookEntryId = pbe.Id,
             Quantity = 1,
             UnitPrice = pbe.UnitPrice
         );
         insert item;
 
-        // 4. A HORA DA VERDADE: Alteramos o CD para disparar a lógica
-        pedido.Centro_Distribuicao__c = cdNovo.Id;
+        order.DistributionCenter__c = dcNew.Id;
 
         Test.startTest();
-        // O Update aciona a sua Trigger, que por sua vez chama o atualizarOrderItens()
-        update pedido;
+        update order;
         Test.stopTest();
 
-        // 5. VALIDAÇÃO
-        Order pedidoAtualizado = [SELECT Centro_Distribuicao__c FROM Order WHERE Id = :pedido.Id];
-        Assert.areEqual(cdNovo.Id, pedidoAtualizado.Centro_Distribuicao__c, 'O CD deveria ter sido atualizado com sucesso, acionando os motores em lote.');
+        Order updatedOrder = [SELECT DistributionCenter__c FROM Order WHERE Id = :order.Id];
+        Assert.areEqual(dcNew.Id, updatedOrder.DistributionCenter__c, 'DC should have been updated successfully, triggering batch pricing engines.');
     }
 
-
-
-    // ====================================================================
-    // INNER CLASS NÍVEL 1: Apenas uma classe de profundidade permitida
-    // Criamos um Mock que herda da sua Handler base para acessar o "super"
-    // ====================================================================
-    private class HandlerMock extends PedidoTriggerHandler {
-        
+    private class HandlerMock extends OrderTriggerHandler {
         public void coverVirtualMethods() {
-            // O 'super' permite chamar os métodos protected da classe pai
             super.afterUpdate();
             super.beforeUpdate();
-            
-        
-            
-            
         }
     }
 
-    // ====================================================================
-    // MÉTODOS DE TESTE
-    // ====================================================================
     @isTest
     static void testBaseHandlerVirtualMethods() {
-        // 1. Instancia a nossa classe mockada
         HandlerMock mock = new HandlerMock();
-        
+
         Test.startTest();
-        
-        // 2. Chama o método do mock que invoca os métodos virtuais vazios {}
-        // Isso vai deixar as linhas do beforeUpdate e afterUpdate verdinhas.
         mock.coverVirtualMethods();
-        
-        // 3. Chama o run() principal. 
-        // Como não estamos em contexto de Trigger, Trigger.isBefore será nulo,
-        // mas o Apex vai ler a linha do "if" e marcar como coberta.
-        
         Test.stopTest();
 
-        // 4. Asserção para garantir que a execução ocorreu sem exceções
-        Assert.isTrue(true, 'A cobertura da classe base virtual foi concluída com sucesso.');
+        Assert.isTrue(true, 'Base virtual class coverage completed successfully.');
     }
-} 
+}
