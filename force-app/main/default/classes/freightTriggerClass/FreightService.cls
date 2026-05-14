@@ -6,6 +6,9 @@ public with sharing class FreightService {
 
         Set<String> chavesNovas = new Set<String>();
         Set<Id> idsExistentesNoLote = new Set<Id>();
+        Set<Id> produtosNovos    = new Set<Id>();
+        Set<Id> hierarquiasNovas = new Set<Id>();
+        Set<Id> cdsNovos         = new Set<Id>();
 
         for (Freight__c f : fretes) {
             String chave = gerarChave(f);
@@ -15,14 +18,20 @@ public with sharing class FreightService {
             }
             chavesNovas.add(chave);
 
-            if (f.Id != null) idsExistentesNoLote.add(f.Id);
+            if (f.Id != null)                    idsExistentesNoLote.add(f.Id);
+            if (f.Product__c != null)            produtosNovos.add(f.Product__c);
+            if (f.ProductHierarchy__c != null)   hierarquiasNovas.add(f.ProductHierarchy__c);
+            if (f.DistributionCenter__c != null) cdsNovos.add(f.DistributionCenter__c);
         }
 
         Map<String, Freight__c> mapaExistentes = new Map<String, Freight__c>();
 
         for(Freight__c existente : [SELECT Id, Product__c, ProductHierarchy__c, State__c, City__c, Country__c, DistributionCenter__c
                                     FROM Freight__c
-                                    WHERE Id NOT IN :idsExistentesNoLote ]) {
+                                    WHERE Status__c = 'Approved'
+                                    AND Id NOT IN :idsExistentesNoLote
+                                    AND DistributionCenter__c IN :cdsNovos
+                                    AND (Product__c IN :produtosNovos OR ProductHierarchy__c IN :hierarquiasNovas)]) {
             mapaExistentes.put(gerarChave(existente), existente);
         }
 

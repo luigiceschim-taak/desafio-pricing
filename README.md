@@ -24,7 +24,7 @@ Os modulos estao organizados majoritariamente por dominio:
 - `force-app/main/default/classes/margemTriggerClass`
 - `force-app/main/default/classes/pedidoTriggerClass`
 - `force-app/main/default/classes/produtoClass`
-- `force-app/main/default/classes/produtoPedidoTriggerClass`
+- `force-app/main/default/classes/produtoPedidoTriggerClass`V
 - `force-app/main/default/classes/motorBusca`
 
 Tambem existem objetos customizados relevantes para o motor de pricing:
