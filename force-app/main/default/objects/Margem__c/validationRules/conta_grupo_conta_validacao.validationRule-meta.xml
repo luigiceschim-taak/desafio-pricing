@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>conta_grupo_conta_validacao</fullName>
-    <active>true</active>
-    <errorConditionFormula>(IF(ISBLANK( Grupo_Conta__c ), 0, 1) + 
- IF(ISBLANK( Conta__c ), 0, 1)) &lt;&gt; 1</errorConditionFormula>
-    <errorMessage>Preencha apenas UM campo. Conta ou Grupo de Conta.</errorMessage>
-</ValidationRule>

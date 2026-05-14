@@ -2,6 +2,10 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
 		<members>*</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>*</members>
 		<name>ApexComponent</name>
 	</types>
 	<types>
@@ -21,22 +25,25 @@
 		<name>AuraDefinitionBundle</name>
 	</types>
 	<types>
-		<members>Centro_de_Distribuicao__c</members>
-		<members>Cidade__c</members>
-		<members>Condicao_Pagamento__c</members>
-		<members>Endereco__c</members>
-		<members>Estado__c</members>
-		<members>Frete__c</members>
-		<members>Grupo_Conta__c</members>
-		<members>Hierarquia_Produto__c</members>
-		<members>Imposto__c</members>
-		<members>Margem__c</members>
+		<members>Account</members>
+		<members>AccountGroup__c</members>
+		<members>Address__c</members>
+		<members>City__c</members>
+		<members>Country__c</members>
+		<members>DistributionCenter__c</members>
+		<members>Freight__c</members>
+		<members>IntegrationLog__c</members>
+		<members>Margin__c</members>
 		<members>Order</members>
 		<members>OrderItem</members>
-		<members>Pais__c</members>
+		<members>PaymentTerm__c</members>
+		<members>Product2</members>
+		<members>ProductHierarchy__c</members>
+		<members>State__c</members>
+		<members>Tax__c</members>
 		<name>CustomObject</name>
 	</types>
-	<types>
+<types>
 		<members>*</members>
 		<name>LightningComponentBundle</name>
 	</types>
