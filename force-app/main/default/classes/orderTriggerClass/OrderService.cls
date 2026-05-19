@@ -11,17 +11,20 @@ public with sharing class OrderService {
     }
 
     public static void validarStatusPedido(List<Order> pedidos, Map<Id, Order> pedidosAntigos) {
-        // Impede que pedidos com status "ATIVO" sejam editados, ele observa apenas o que esta mandando!
-
-
         for(Order o : pedidos) {
             Order oldOrder = pedidosAntigos.get(o.Id);
-            if (oldOrder != null && oldOrder.Status == 'Ativo') {
-                o.addError('Pedidos com status "ATIVO" não podem ser editados.');
+            if (oldOrder != null && oldOrder.Status == 'Integrated') {
+                if (o.AccountId != oldOrder.AccountId ||
+                    o.Pricebook2Id != oldOrder.Pricebook2Id ||
+                    o.EffectiveDate != oldOrder.EffectiveDate ||
+                    o.Status != oldOrder.Status) {
+                    o.addError('Pedidos com status "INTEGRADO" não podem ser editados.');
+                }
             }
         }
     }
     public static void atualizarOrderItens(List<Order> pedidos, Map<Id, Order> pedidosAntigos) {
+        if (TriggerControl.isRecalculating) return;
         Set<Id> pedidosComAlteracaoIds = new Set<Id>();
 
         // 1. Identificar quais pedidos realmente mudaram (Filtragem)
@@ -43,19 +46,33 @@ public with sharing class OrderService {
         ];
 
         if (!itensParaAtualizar.isEmpty()) {
-            system.debug('Executando motores de busca em lote');
             PricingFacade.calcularPricing(itensParaAtualizar);
 
+            Database.update(itensParaAtualizar, false);
+        }
+    }
+    public static void calloutStatusActive(List<Order> orders, Map<Id, Order> oldOrders) {
+        System.debug('### [calloutStatusActive] Início — total orders no batch: ' + orders.size());
 
+        List<String> activeOrderIds = new List<String>();
 
-            List <Database.SaveResult> resultadosUpdate = Database.update(itensParaAtualizar, false);
-            for(Integer i = 0; i < resultadosUpdate.size(); i++){
-                Database.SaveResult resultado = resultadosUpdate[i];
+        for (Order o : orders) {
+            Order oldOrder = oldOrders.get(o.Id);
+            System.debug('### [calloutStatusActive] Order Id: ' + o.Id + ' | Status novo: ' + o.Status + ' | Status antigo: ' + oldOrder.Status);
 
-                if(!resultado.isSuccess()){
-
-                }
+            if (o.Status == 'Integrated' && oldOrder.Status != 'Integrated') {
+                System.debug('### [calloutStatusActive] Order QUALIFICOU para callout: ' + o.Id);
+                activeOrderIds.add(o.Id);
             }
+        }
+
+        System.debug('### [calloutStatusActive] Total de orders para callout: ' + activeOrderIds.size());
+
+        if (!activeOrderIds.isEmpty()) {
+            System.debug('### [calloutStatusActive] Disparando @future com IDs: ' + activeOrderIds);
+            CalloutOrder.executeCalloutOrderAsync(activeOrderIds);
+        } else {
+            System.debug('### [calloutStatusActive] Nenhum order qualificou — callout não disparado.');
         }
     }
 
