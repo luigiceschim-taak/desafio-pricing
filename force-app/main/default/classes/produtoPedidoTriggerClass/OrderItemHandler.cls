@@ -2,6 +2,11 @@ public class OrderItemHandler extends TriggerHandler {
 
     public override void afterInsert() {
         mesclarItensExistentes((List<OrderItem>) Trigger.new);
+        OrderItemService.recalculateOrder((List<OrderItem>) Trigger.new);
+    }
+
+    public override void afterUpdate() {
+        OrderItemService.recalculateOrder((List<OrderItem>) Trigger.new);
     }
 
     public override void beforeInsert(){
@@ -111,7 +116,7 @@ public class OrderItemHandler extends TriggerHandler {
 
         for (OrderItem item : itens) {
             Order ped = mapaPedidos.get(item.OrderId);
-            if (ped != null && ped.Status == 'Ativo') {
+            if (ped != null && ped.Status == 'Activated') {
                 item.addError('Erro: Itens de um pedido ativo não podem ser alterados.');
             }
         }

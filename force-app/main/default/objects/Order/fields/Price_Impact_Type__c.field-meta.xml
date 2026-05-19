@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Price_Impact_Type__c</fullName>
+    <label>Impacto Da Venda</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>DISCOUNT</fullName>
+                <default>false</default>
+                <label>DISCOUNT</label>
+            </value>
+            <value>
+                <fullName>PROFIT</fullName>
+                <default>false</default>
+                <label>PROFIT</label>
+            </value>
+            <value>
+                <fullName>NO_VARIANCE</fullName>
+                <default>false</default>
+                <label>NO_VARIANCE</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
