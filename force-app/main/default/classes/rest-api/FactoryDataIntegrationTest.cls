@@ -53,7 +53,6 @@ public with sharing class FactoryDataIntegrationTest {
 
 		DataIntegrationFields.OrderINData orderINData = fillOrderINData(order);
 		DataIntegrationFields.OrderINData orderINDataWithId = fillOrderINData(order);
-		orderINDataWithId.id = order.Id;
 
 		List<DataIntegrationFields.OrderINData> orderRequest = new List<DataIntegrationFields.OrderINData>{ orderINData, orderINDataWithId };
 

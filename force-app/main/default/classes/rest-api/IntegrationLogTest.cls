@@ -14,8 +14,8 @@ public with sharing class IntegrationLogTest {
 		String orderExternalId = 'test';
 
 		Test.startTest();
-			IntegrationLog.createLog('', externalIdList, '', payloadIN, payloadOUT, endpoint, hasAnyErrors, hasDeleted, orderExternalId);
-			String logId = IntegrationLog.createLog(integrationName, externalIdList, recordTypeName, payloadIN, payloadOUT, endpoint, hasAnyErrors, hasDeleted,orderExternalId);
+			IntegrationLog.createLog('', externalIdList, '', payloadIN, payloadOUT, '', endpoint, hasAnyErrors, hasDeleted, orderExternalId);
+			String logId = IntegrationLog.createLog(integrationName, externalIdList, recordTypeName, payloadIN, payloadOUT, '', endpoint, hasAnyErrors, hasDeleted, orderExternalId);
 			IntegrationLog.createAttachment(logId, integrationName, recordTypeName, integrationName, String.valueOf(datetimeNow), payloadIN);
 		Test.stopTest();
 	}

@@ -122,7 +122,7 @@ private class OrderTest {
         );
         insert orderItem;
 
-        order.Status = 'Ativo';
+        order.Status = 'Activated';
         update order;
 
         order.Description = 'Blocked edit attempt';
@@ -172,7 +172,7 @@ private class OrderTest {
 
         Order orderToUpdate = orders[0];
         orderToUpdate.OrderItems.add(orderItem);
-        orderToUpdate.Status = 'Ativo';
+        orderToUpdate.Status = 'Activated';
 
         try {
             insert orderItem;

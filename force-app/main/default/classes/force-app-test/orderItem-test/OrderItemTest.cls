@@ -176,7 +176,7 @@ private class OrderItemTest {
         insert item;
 
         Order activeOrder = [SELECT Id, Status FROM Order WHERE Id = :order.Id LIMIT 1];
-        activeOrder.Status = 'Ativo';
+        activeOrder.Status = 'Activated';
         update activeOrder;
 
         try {

@@ -75,22 +75,4 @@ public with sharing class TemplateDefaultFields {
 		}
 	}
 
-	public class IntegrationSettingDefaults implements FieldDefaults {
-		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
-			return new Map<String, Object>{
-				'Name' => 'IntegrationSettingName',
-				'Method__c' => 'POST',
-				'Endpoint__c' => 'Endpoint',
-				'User__c' => UserInfo.getUserName(),
-				'Password__c' => UserInfo.getUserName(),
-				'Timeout__c' => 110000,
-				'AccessToken__c' => 'AccessToken' + String.valueOf(Datetime.now()),
-				'ClientId__c' => String.valueOf(Datetime.now()),
-				'ClientSecret__c' => UserInfo.getUserName() + String.valueOf(Datetime.now()),
-				'EndpointAccessToken__c' => 'EndpointAccessToken',
-				'AccessTokenTime__c' => 360000,
-				'LastAccessTokenTime__c' => Decimal.valueOf(Datetime.now().getTime())
-			};
-		}
-	}
 }

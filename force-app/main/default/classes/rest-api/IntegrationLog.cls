@@ -1,5 +1,5 @@
 public with sharing class IntegrationLog {
-	public static Id createLog(String integrationName, String externalIdList, String recordTypeName, String payloadIN, String payloadOUT,
+	public static Id createLog(String integrationName, String externalIdList, String recordTypeName, String payloadIN, String payloadOUT, String errorMessage,
 								String endpoint, Boolean hasAnyErrors, Boolean hasDeleted, String orderExternalId){
 		System.debug('');
 		// Se os dados forem maiores que 100.000 TRUE, se não FALSE
@@ -7,9 +7,8 @@ public with sharing class IntegrationLog {
 		Boolean attachmentOUT = (payloadOUT.length() > 130000);
 		Datetime datetimeNow = System.now(); // Data Atual
 		// Pega Id do log de integração (IN ou OUT)
-		Id recordTypeId = Schema.SObjectType.IntegrationLog__c.getRecordTypeInfosByDeveloperName().containsKey(recordTypeName) ?
-							Schema.SObjectType.IntegrationLog__c.getRecordTypeInfosByName().get(recordTypeName).getRecordTypeId()
-							: null;
+		Map<String, Schema.RecordTypeInfo> rtByDevName = Schema.SObjectType.IntegrationLog__c.getRecordTypeInfosByDeveloperName();
+		Id recordTypeId = rtByDevName.containsKey(recordTypeName) ? rtByDevName.get(recordTypeName).getRecordTypeId() : null;
 
 		if (recordTypeId == null) System.debug('Falha ao pegar o recordTypeId do log de integração => ' + recordTypeId);
 
