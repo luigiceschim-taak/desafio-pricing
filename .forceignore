@@ -10,3 +10,10 @@ package.xml
 
 # LWC Jest
 **/__tests__/**
+
+# UI Bundle — exclude build artifacts and dependencies from deploy
+**/uiBundles/**/node_modules/**
+**/uiBundles/**/.vite/**
+**/uiBundles/**/playwright-report/**
+**/uiBundles/**/test-results/**
+**/uiBundles/**/*.log

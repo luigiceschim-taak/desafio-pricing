@@ -1,10 +1,14 @@
 {
-  "orgName": "grupotaak company",
+  "orgName": "Pricing Dashboard Dev",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "language": "en_US",
+  "features": ["EnableSetPasswordInApi", "MultiCurrency"],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
+    },
+    "UIBundleSettings": {
+      "webAppOptIn": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
