@@ -1,28 +1,20 @@
 public class TaxSelector {
-    public static Map<String, Tax__c> getMapaRegras(Set<Id> produtosIds, Set<Id> locaisIds, Set<Id> cdsIds) {
-        Map<String, Tax__c> mapaRegras = new Map<String, Tax__c>();
+    public static Map<String, Tax__c> getRulesMap(Set<Id> productIds, Set<Id> locationIds, Set<Id> dcIds) {
+        Map<String, Tax__c> rulesMap = new Map<String, Tax__c>();
 
-        // A Query Única
-        // O CD aqui serve apenas para restringir o universo de busca
-        List<Tax__c> impostos =[
+        List<Tax__c> taxes =[
             SELECT Id, TaxCost__c, Product__c, State__c, DistributionCenter__c
             FROM Tax__c
             WHERE Status__c = 'Approved'
-            AND DistributionCenter__c IN :cdsIds
-            AND Product__c IN :produtosIds];
+            AND DistributionCenter__c IN :dcIds
+            AND Product__c IN :productIds];
 
-            System.debug('------------------------------------------------');
-            System.debug('Impostos encontrados (TAX SELECTOR): ' + impostos.size());
-            System.debug('------------------------------------------------');
-
-
-        // Montagem da Chave Composta
-        for (Tax__c i : impostos) {
-            String chaveMestra = String.valueOf(i.Product__c) +
-                         String.valueOf(i.DistributionCenter__c) +
-                         String.valueOf(i.State__c);
-            mapaRegras.put(chaveMestra, i);
+        for (Tax__c t : taxes) {
+            String masterKey = String.valueOf(t.Product__c) +
+                         String.valueOf(t.DistributionCenter__c) +
+                         String.valueOf(t.State__c);
+            rulesMap.put(masterKey, t);
         }
-        return mapaRegras;
+        return rulesMap;
     }
 }

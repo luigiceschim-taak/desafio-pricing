@@ -55,7 +55,7 @@ private class FreightSelectorTest {
         Set<Id> locationsIds = new Set<Id>{ city.Id, state.Id, country.Id };
 
         Test.startTest();
-        Map<String, Freight__c> returnedMap = FreightSelector.getMapaRegras(productsIds, hierarchiesIds, locationsIds, dcsIds);
+        Map<String, Freight__c> returnedMap = FreightSelector.getRulesMap(productsIds, hierarchiesIds, locationsIds, dcsIds);
         Test.stopTest();
 
         Assert.areEqual(6, returnedMap.size(), 'The map should contain exactly 6 unique freight combinations.');

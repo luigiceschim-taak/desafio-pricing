@@ -28,7 +28,8 @@ public with sharing class OrderItemService {
                 Price_Impact__c        = (Decimal) pricing.get('Price_Impact__c'),
                 Discount_Percentage__c = (Decimal) pricing.get('Discount_Percentage__c'),
                 Profit_Percentage__c   = (Decimal) pricing.get('Profit_Percentage__c'),
-                Price_Impact_Type__c   = (String)  pricing.get('Price_Impact_Type__c')
+                Price_Impact_Type__c   = (String)  pricing.get('Price_Impact_Type__c'),
+                Approval_Process__c    = (Boolean) pricing.get('Approval_Process__c')
             ));
         }
 
@@ -39,11 +40,12 @@ public with sharing class OrderItemService {
         Decimal totalIdeal  = 0;
         Decimal totalActual = 0;
 
-        for (OrderItem IOrderItens : orderItems) {
+        for (OrderItem IOrderItens : orderItems) { 
             totalIdeal  += IOrderItens.TotalIdealPrice__c  != null ? IOrderItens.TotalIdealPrice__c  : 0;
             totalActual += IOrderItens.TotalSellingPrice__c != null ? IOrderItens.TotalSellingPrice__c : 0;
         }
 
+        // positive = actual above ideal (profit); negative = actual below ideal (discount)
         Decimal priceImpact = totalActual - totalIdeal;
 
         String impactType;
@@ -51,8 +53,10 @@ public with sharing class OrderItemService {
         else if (priceImpact < 0) impactType = 'DISCOUNT';
         else                      impactType = 'NO_VARIANCE';
 
-        Decimal discountPct = totalIdeal != 0 ? (Math.abs(priceImpact) / totalIdeal) * 100 : 0;
-        Decimal profitPct   = totalIdeal != 0 ? (Math.abs(priceImpact) / totalIdeal) * 100 : 0;
+        Decimal pctBase     = totalIdeal != 0 ? (Math.abs(priceImpact) / totalIdeal) * 100 : 0;
+        Decimal discountPct = Math.max(0, impactType == 'DISCOUNT' ? pctBase : 0);
+        Decimal profitPct   = Math.max(0, impactType == 'PROFIT'   ? pctBase : 0);
+        Boolean needsApproval = profitPct > 20 || discountPct > 20;
 
         Map<String, Object> result = new Map<String, Object>();
         result.put('Total_Ideal_Price__c',   totalIdeal);
@@ -61,6 +65,7 @@ public with sharing class OrderItemService {
         result.put('Discount_Percentage__c', discountPct);
         result.put('Profit_Percentage__c',   profitPct);
         result.put('Price_Impact_Type__c',   impactType);
+        result.put('Approval_Process__c',    needsApproval);
         return result;
     }
 }

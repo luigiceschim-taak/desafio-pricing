@@ -1,24 +1,24 @@
 public with sharing class MarginContext {
-    public Id pId;   // Produto
-    public Id hId;   // Hierarquia produto
-    public Id cntId; // Conta
-    public Id hCntId; // Hierarquia conta
-    public Id cdId;  // Centro de Distribuição
-    public Id paiId; // País
-    public Id estId; // Estado
-    public Id cidId; // Cidade
+    public Id pId;    // Product
+    public Id hId;    // Product Hierarchy
+    public Id cntId;  // Account
+    public Id hCntId; // Account Group
+    public Id cdId;   // Distribution Center
+    public Id paiId;  // Country
+    public Id estId;  // State
+    public Id cidId;  // City
 
-    public MarginContext(OrderItem item, Order ped, Id hierarquiaId) {
+    public MarginContext(OrderItem item, Order order, Id hierarchyId) {
         this.pId    = item.Product2Id;
-        this.hId    = hierarquiaId;
-        this.cntId  = ped.AccountId;
-        this.hCntId = (ped.Account != null) ? ped.Account.AccountGroup__c : null;
-        this.cdId   = ped.DistributionCenter__c;
+        this.hId    = hierarchyId;
+        this.cntId  = order.AccountId;
+        this.hCntId = (order.Account != null) ? order.Account.AccountGroup__c : null;
+        this.cdId   = order.DistributionCenter__c;
 
-        if (ped.Address__c != null) {
-            this.cidId = ped.Address__r.City__c;
-            this.estId = ped.Address__r.City__r?.State__c;
-            this.paiId = ped.Address__r.City__r?.State__r?.Country__c;
+        if (order.Address__c != null) {
+            this.cidId = order.Address__r.City__c;
+            this.estId = order.Address__r.City__r?.State__c;
+            this.paiId = order.Address__r.City__r?.State__r?.Country__c;
         }
     }
 }

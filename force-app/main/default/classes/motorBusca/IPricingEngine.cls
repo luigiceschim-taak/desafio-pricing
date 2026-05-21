@@ -1,4 +1,4 @@
 public interface IPricingEngine {
-    void calculatePrice(List<OrderItem> item, PricingContext contexto);
+    void calculatePrice(List<OrderItem> items, PricingContext context);
 
 }

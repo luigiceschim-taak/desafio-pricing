@@ -1,24 +1,24 @@
 public class FreightPricingEngine implements IPricingEngine {
 
-    public void calculatePrice(List<OrderItem> itens, PricingContext context) {
-        Map<String, Freight__c> mapaRegras = FreightSelector.getMapaRegras(
-            context.frete.produtosIds,
-            context.frete.hierarquiasIds,
-            context.frete.locaisIds,
-            context.frete.cdsIds
+    public void calculatePrice(List<OrderItem> items, PricingContext context) {
+        Map<String, Freight__c> rulesMap = FreightSelector.getRulesMap(
+            context.freight.productIds,
+            context.freight.hierarchyIds,
+            context.freight.locationIds,
+            context.freight.dcIds
         );
-        FreightEngine motor = new FreightEngine(mapaRegras);
+        FreightEngine engine = new FreightEngine(rulesMap);
 
-        for (OrderItem item : itens) {
-            Order ped = context.mapPedidos.get(item.OrderId);
-            Id hId = context.mapProdutos.get(item.Product2Id)?.ProductHierarchy__c;
-            FreightContext ctx = new FreightContext(item, ped, hId);
-            Freight__c resultado = motor.buscar(ctx);
+        for (OrderItem item : items) {
+            Order order = context.mapOrders.get(item.OrderId);
+            Id hId = context.mapProducts.get(item.Product2Id)?.ProductHierarchy__c;
+            FreightContext ctx = new FreightContext(item, order, hId);
+            Freight__c result = engine.find(ctx);
 
-            if (resultado != null) {
-                item.FreightCost__c = resultado.Cost__c;
+            if (result != null) {
+                item.FreightCost__c = result.Cost__c;
             } else {
-                item.addError('Erro: Frete não existe. Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
+                item.addError('Error: Freight rule not found. Sale of this product is not authorized due to missing pricing parameters. Contact the Pricing team.');
             }
         }
     }

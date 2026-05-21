@@ -1,11 +1,11 @@
 public with sharing class PricingFacade {
 
-    public static void calcularPricing(List<OrderItem> newItens) {
+    public static void calculatePricing(List<OrderItem> newItems) {
 
         Set<Id> orderIDs = new Set<Id>();
         Set<Id> productIDs = new Set<Id>();
 
-        for (OrderItem item : newItens) {
+        for (OrderItem item : newItems) {
             if (item.OrderId != null) orderIDs.add(item.OrderId);
             if (item.Product2Id != null) productIDs.add(item.Product2Id);
         }
@@ -29,7 +29,7 @@ public with sharing class PricingFacade {
             WHERE Id IN :productIDs
         ]);
 
-        PricingContext context = generateGeneralContext(newItens, mapOrder, mapProduct);
+        PricingContext context = buildGlobalContext(newItems, mapOrder, mapProduct);
 
         List<IPricingEngine> engines = new List<IPricingEngine>{
             new FreightPricingEngine(),
@@ -38,73 +38,73 @@ public with sharing class PricingFacade {
         };
 
         for (IPricingEngine engine : engines) {
-            engine.calculatePrice(newItens, context);
+            engine.calculatePrice(newItems, context);
         }
     }
 
 
-    private static PricingContext generateGeneralContext(List<OrderItem> newItens, Map<Id, Order> mapOrder, Map<Id, Product2> mapProduct) {
-        PricingContext contextoGeral = new PricingContext();
+    private static PricingContext buildGlobalContext(List<OrderItem> newItems, Map<Id, Order> mapOrder, Map<Id, Product2> mapProduct) {
+        PricingContext globalContext = new PricingContext();
 
-        contextoGeral.mapPedidos  = mapOrder;
-        contextoGeral.mapProdutos = mapProduct;
+        globalContext.mapOrders   = mapOrder;
+        globalContext.mapProducts = mapProduct;
 
-        for (OrderItem item : newItens) {
-            Order order     = mapOrder.get(item.OrderId);
+        for (OrderItem item : newItems) {
+            Order order      = mapOrder.get(item.OrderId);
             Product2 product = mapProduct.get(item.Product2Id);
 
-            // --- Malinha de FRETE ---
-            contextoGeral.frete.produtosIds.add(item.Product2Id);
+            // --- FREIGHT ---
+            globalContext.freight.productIds.add(item.Product2Id);
 
             if (product != null && product.ProductHierarchy__c != null) {
-                contextoGeral.frete.hierarquiasIds.add(product.ProductHierarchy__c);
+                globalContext.freight.hierarchyIds.add(product.ProductHierarchy__c);
             }
             if (order != null) {
                 if (order.DistributionCenter__c != null) {
-                    contextoGeral.frete.cdsIds.add(order.DistributionCenter__c);
+                    globalContext.freight.dcIds.add(order.DistributionCenter__c);
                 }
                 if (order.Address__r != null) {
-                    if (order.Address__r.City__c != null) contextoGeral.frete.locaisIds.add(order.Address__r.City__c);
-                    if (order.Address__r.City__r?.State__c != null) contextoGeral.frete.locaisIds.add(order.Address__r.City__r.State__c);
-                    if (order.Address__r.City__r?.State__r?.Country__c != null) contextoGeral.frete.locaisIds.add(order.Address__r.City__r.State__r.Country__c);
+                    if (order.Address__r.City__c != null) globalContext.freight.locationIds.add(order.Address__r.City__c);
+                    if (order.Address__r.City__r?.State__c != null) globalContext.freight.locationIds.add(order.Address__r.City__r.State__c);
+                    if (order.Address__r.City__r?.State__r?.Country__c != null) globalContext.freight.locationIds.add(order.Address__r.City__r.State__r.Country__c);
                 }
             }
 
-            // --- Malinha de MARGEM ---
-            contextoGeral.margem.produtosIds.add(item.Product2Id);
+            // --- MARGIN ---
+            globalContext.margin.productIds.add(item.Product2Id);
 
             if (product != null && product.ProductHierarchy__c != null) {
-                contextoGeral.margem.hierarquiasIds.add(product.ProductHierarchy__c);
+                globalContext.margin.hierarchyIds.add(product.ProductHierarchy__c);
             }
             if (order != null) {
-                if (order.AccountId != null) contextoGeral.margem.contasIds.add(order.AccountId);
+                if (order.AccountId != null) globalContext.margin.accountIds.add(order.AccountId);
                 if (order.Account != null && order.Account.AccountGroup__c != null) {
-                    contextoGeral.margem.hContasIds.add(order.Account.AccountGroup__c);
+                    globalContext.margin.accountGroupIds.add(order.Account.AccountGroup__c);
                 }
                 if (order.DistributionCenter__c != null) {
-                    contextoGeral.margem.cdsIds.add(order.DistributionCenter__c);
+                    globalContext.margin.dcIds.add(order.DistributionCenter__c);
                 }
                 if (order.Address__r != null) {
-                    if (order.Address__r.City__c != null) contextoGeral.margem.locaisIds.add(order.Address__r.City__c);
-                    if (order.Address__r.City__r?.State__c != null) contextoGeral.margem.locaisIds.add(order.Address__r.City__r.State__c);
-                    if (order.Address__r.City__r?.State__r?.Country__c != null) contextoGeral.margem.locaisIds.add(order.Address__r.City__r.State__r.Country__c);
+                    if (order.Address__r.City__c != null) globalContext.margin.locationIds.add(order.Address__r.City__c);
+                    if (order.Address__r.City__r?.State__c != null) globalContext.margin.locationIds.add(order.Address__r.City__r.State__c);
+                    if (order.Address__r.City__r?.State__r?.Country__c != null) globalContext.margin.locationIds.add(order.Address__r.City__r.State__r.Country__c);
                 }
             }
 
-            // --- Malinha de IMPOSTO ---
-            contextoGeral.imposto.produtosIds.add(item.Product2Id);
+            // --- TAX ---
+            globalContext.tax.productIds.add(item.Product2Id);
 
             if (order != null) {
                 if (order.DistributionCenter__c != null) {
-                    contextoGeral.imposto.cdsIds.add(order.DistributionCenter__c);
+                    globalContext.tax.dcIds.add(order.DistributionCenter__c);
                 }
                 if (order.Address__r != null && order.Address__r.City__r?.State__c != null) {
-                    contextoGeral.imposto.locaisIds.add(order.Address__r.City__r.State__c);
+                    globalContext.tax.locationIds.add(order.Address__r.City__r.State__c);
                 }
             }
         }
 
-        return contextoGeral;
+        return globalContext;
     }
 
 }

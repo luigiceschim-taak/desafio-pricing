@@ -91,7 +91,21 @@ public with sharing class CalloutOrder {
     @future(callout=true)
     public static void executeCalloutOrderAsync(List<String> orderIdList) {
         System.debug('### [executeCalloutOrderAsync] @future iniciado com IDs: ' + orderIdList);
-        executeCalloutOrder(orderIdList);
+        DataIntegrationFields.CalloutResponse calloutResponse = executeCalloutOrder(orderIdList);
+        String newStatus = calloutResponse.hasError ? 'IntegrationError' : 'Integrated';
+        updateOrderStatus(orderIdList, newStatus);
+    }
+
+    private static void updateOrderStatus(List<String> orderIdList, String newStatus) {
+        List<Order> ordersToUpdate = new List<Order>();
+        for (String orderId : orderIdList) {
+            ordersToUpdate.add(new Order(Id = orderId, Status = newStatus));
+        }
+        if (!ordersToUpdate.isEmpty()) {
+            TriggerControl.ignoreActivatedCheck = true;
+            update ordersToUpdate;
+            TriggerControl.ignoreActivatedCheck = false;
+        }
     }
 
     public static List<Order> getOrders(List<String> orderIdList) {

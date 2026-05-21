@@ -1,58 +1,54 @@
 public with sharing class TaxService {
 
-    public static void validarDuplicidadeImposto(List<Tax__c> impostos){
-        Set<String> chavesNovas = new Set<String>();
-        Set<Id> idsExistentesNoLote = new Set<Id>();
+    public static void validateTaxDuplicity(List<Tax__c> taxes){
+        Set<String> newKeys = new Set<String>();
+        Set<Id> existingIds = new Set<Id>();
 
-        Set<Id> produtosNovos = new Set<Id>();
-        Set<Id> cdsNovos      = new Set<Id>();
+        Set<Id> newProductIds = new Set<Id>();
+        Set<Id> newDcIds      = new Set<Id>();
 
-        // 1. Coleta chaves do lote e valida valores básicos
-        for (Tax__c i : impostos) {
-            if (i.TaxCost__c == null || i.TaxCost__c <= 0) {
-                i.addError('O valor do Imposto de Custo deve ser maior que zero.');
+        for (Tax__c t : taxes) {
+            if (t.TaxCost__c == null || t.TaxCost__c <= 0) {
+                t.addError('Tax cost value must be greater than zero.');
             }
 
-            String chave = gerarChave(i);
+            String key = generateKey(t);
 
-            if (chavesNovas.contains(chave)) {
-                i.addError('Erro: Registro duplicado no mesmo lote para a combinação: ' + chave);
+            if (newKeys.contains(key)) {
+                t.addError('Error: Duplicate record in same batch for combination: ' + key);
             }
-            chavesNovas.add(chave);
+            newKeys.add(key);
 
-            if (i.Id != null)                    idsExistentesNoLote.add(i.Id);
-            if (i.Product__c != null)            produtosNovos.add(i.Product__c);
-            if (i.DistributionCenter__c != null) cdsNovos.add(i.DistributionCenter__c);
+            if (t.Id != null)                    existingIds.add(t.Id);
+            if (t.Product__c != null)            newProductIds.add(t.Product__c);
+            if (t.DistributionCenter__c != null) newDcIds.add(t.DistributionCenter__c);
         }
 
-        // 2. Busca apenas registros que poderiam colidir com o lote atual
-        Map<String, Tax__c> mapaExistentes = new Map<String, Tax__c>();
+        Map<String, Tax__c> existingMap = new Map<String, Tax__c>();
 
-        for (Tax__c existente : [SELECT Id, Product__c, DistributionCenter__c, State__c
+        for (Tax__c existing : [SELECT Id, Product__c, DistributionCenter__c, State__c
                                     FROM Tax__c
                                     WHERE Status__c = 'Approved'
-                                    AND Id NOT IN :idsExistentesNoLote
-                                    AND Product__c IN :produtosNovos
-                                    AND DistributionCenter__c IN :cdsNovos]) {
+                                    AND Id NOT IN :existingIds
+                                    AND Product__c IN :newProductIds
+                                    AND DistributionCenter__c IN :newDcIds]) {
 
-            mapaExistentes.put(gerarChave(existente), existente);
+            existingMap.put(generateKey(existing), existing);
         }
 
-        // 3. Comparação Final
-        for (Tax__c novo : impostos) {
-            String chaveNovo = gerarChave(novo);
+        for (Tax__c newRecord : taxes) {
+            String newKey = generateKey(newRecord);
 
-            if (mapaExistentes.containsKey(chaveNovo)) {
-
-                novo.addError('Já existe um registro de Imposto Ativo com esta exata combinação: ' + chaveNovo);
+            if (existingMap.containsKey(newKey)) {
+                newRecord.addError('An active Tax record already exists for this exact combination: ' + newKey);
             }
         }
     }
 
-    private static String gerarChave(Tax__c i) {
-        return  (i.Product__c != null ? (String)i.Product__c : 'null') + '|' +
-                (i.DistributionCenter__c != null ? (String)i.DistributionCenter__c : 'null') + '|' +
-                (i.State__c != null ? (String)i.State__c : 'null');
+    private static String generateKey(Tax__c t) {
+        return  (t.Product__c != null ? (String)t.Product__c : 'null') + '|' +
+                (t.DistributionCenter__c != null ? (String)t.DistributionCenter__c : 'null') + '|' +
+                (t.State__c != null ? (String)t.State__c : 'null');
     }
 
 

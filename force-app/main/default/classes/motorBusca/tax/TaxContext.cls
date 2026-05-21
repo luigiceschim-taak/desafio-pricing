@@ -1,15 +1,14 @@
 public with sharing class TaxContext {
-    public Id pId;   // Produto
-    public Id cdId;  // Centro de Distribuição
-    public Id estId; // Estado
+    public Id pId;   // Product
+    public Id cdId;  // Distribution Center
+    public Id estId; // State
 
-    // Construtor para facilitar a criação dentro do loop
-    public TaxContext(OrderItem item, Order ped) {
+    public TaxContext(OrderItem item, Order order) {
         this.pId   = item.Product2Id;
-        this.cdId  = ped.DistributionCenter__c;
+        this.cdId  = order.DistributionCenter__c;
 
-        if(ped.Address__r != null) {
-            this.estId = ped.Address__r.City__r?.State__c;
+        if(order.Address__r != null) {
+            this.estId = order.Address__r.City__r?.State__c;
         }
 
     }

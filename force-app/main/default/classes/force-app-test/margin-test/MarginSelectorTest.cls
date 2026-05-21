@@ -77,7 +77,7 @@ private class MarginSelectorTest {
         Set<Id> dcsIds = new Set<Id>{ dc.Id };
 
         Test.startTest();
-        Map<String, Margin__c> returnedMap = MarginSelector.getMapaRegras(productsIds, new Set<Id>(), locationsIds, dcsIds, accountsIds, accountGroupsIds);
+        Map<String, Margin__c> returnedMap = MarginSelector.getRulesMap(productsIds, new Set<Id>(), locationsIds, dcsIds, accountsIds, accountGroupsIds);
         Test.stopTest();
 
         Assert.areEqual(12, returnedMap.size(), 'Should contain exactly 12 combinations.');

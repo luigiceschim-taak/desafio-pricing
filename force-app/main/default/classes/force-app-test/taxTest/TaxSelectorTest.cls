@@ -55,7 +55,7 @@ private class TaxSelectorTest {
             locationsIds.add(s.Id);
         }
 
-        Map<String, Tax__c> taxes = TaxSelector.getMapaRegras(productsIds, locationsIds, dcsIds);
+        Map<String, Tax__c> taxes = TaxSelector.getRulesMap(productsIds, locationsIds, dcsIds);
 
         String masterKey = String.valueOf(tax.Product__c) +
                          String.valueOf(tax.DistributionCenter__c) +

@@ -1,36 +1,24 @@
 public abstract class FreightStrategy {
-    // Método que cada estratégia deve implementar (Produto ou Hierarquia)
-    public abstract Freight__c search(FreightContext ctx, Map<String, Freight__c> mapaRegras);
+    public abstract Freight__c search(FreightContext ctx, Map<String, Freight__c> rulesMap);
 
-    // Método utilitário comum: tenta buscar na escada geográfica
-    protected Freight__c buscarNaGeografia(Id alvoId, FreightContext ctx, Map<String, Freight__c> mapaRegras) {
-        if (alvoId == null) return null;
-        String aId = String.valueOf(alvoId);
+    protected Freight__c searchByGeography(Id targetId, FreightContext ctx, Map<String, Freight__c> rulesMap) {
+        if (targetId == null) return null;
 
-
-
-        // 1. Tenta por CIDADE
         if (ctx.cidId != null) {
-            String chaveCid = String.valueOf((Id)alvoId) + String.valueOf((Id)ctx.cidId);
-            System.debug('>>> [FreightStrategy] Tentando chave CIDADE: ' + chaveCid);
-            if (mapaRegras.containsKey(chaveCid)) return mapaRegras.get(chaveCid);
+            String cityKey = String.valueOf((Id)targetId) + String.valueOf((Id)ctx.cidId);
+            if (rulesMap.containsKey(cityKey)) return rulesMap.get(cityKey);
         }
 
-        // 2. Tenta por ESTADO
         if (ctx.estId != null) {
-            String chaveEst = String.valueOf((Id)alvoId) + String.valueOf((Id)ctx.estId);
-            System.debug('>>> [FreightStrategy] Tentando chave ESTADO: ' + chaveEst);
-            if (mapaRegras.containsKey(chaveEst)) return mapaRegras.get(chaveEst);
+            String stateKey = String.valueOf((Id)targetId) + String.valueOf((Id)ctx.estId);
+            if (rulesMap.containsKey(stateKey)) return rulesMap.get(stateKey);
         }
 
-        // 3. Tenta por PAÍS
         if (ctx.paiId != null) {
-            String chavePai = String.valueOf((Id)alvoId) + String.valueOf((Id)ctx.paiId);
-            System.debug('>>> [FreightStrategy] Tentando chave PAÍS: ' + chavePai);
-            if (mapaRegras.containsKey(chavePai)) return mapaRegras.get(chavePai);
+            String countryKey = String.valueOf((Id)targetId) + String.valueOf((Id)ctx.paiId);
+            if (rulesMap.containsKey(countryKey)) return rulesMap.get(countryKey);
         }
 
-        System.debug('>>> [FreightStrategy] Nenhuma chave geográfica encontrada para o alvo ' + alvoId);
         return null;
     }
 }

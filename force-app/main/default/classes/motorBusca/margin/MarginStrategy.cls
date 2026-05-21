@@ -1,28 +1,24 @@
 public abstract class MarginStrategy {
-    public abstract Margin__c search(MarginContext ctx, Map<String, Margin__c> mapaRegras);
+    public abstract Margin__c search(MarginContext ctx, Map<String, Margin__c> rulesMap);
 
-    // Agora o método recebe o ID do Produto (ou Hierarquia) E o ID da Conta (ou Grupo)
-    protected Margin__c buscarMargemCompleta(Id pAlvo, Id cAlvo, MarginContext ctx, Map<String, Margin__c> mapaRegras) {
-        if (pAlvo == null || cAlvo == null || ctx.cdId == null) return null;
+    protected Margin__c findMarginComplete(Id productTarget, Id accountTarget, MarginContext ctx, Map<String, Margin__c> rulesMap) {
+        if (productTarget == null || accountTarget == null || ctx.cdId == null) return null;
 
-        String baseChave = String.valueOf(pAlvo) + String.valueOf(cAlvo) + String.valueOf(ctx.cdId);
+        String baseKey = String.valueOf(productTarget) + String.valueOf(accountTarget) + String.valueOf(ctx.cdId);
 
-        // --- TENTATIVA 1: CIDADE ---
         if (ctx.cidId != null) {
-            String chaveCid = baseChave + String.valueOf(ctx.cidId);
-            if (mapaRegras.containsKey(chaveCid)) return mapaRegras.get(chaveCid);
+            String cityKey = baseKey + String.valueOf(ctx.cidId);
+            if (rulesMap.containsKey(cityKey)) return rulesMap.get(cityKey);
         }
 
-        // --- TENTATIVA 2: ESTADO ---
         if (ctx.estId != null) {
-            String chaveEst = baseChave + String.valueOf(ctx.estId);
-            if (mapaRegras.containsKey(chaveEst)) return mapaRegras.get(chaveEst);
+            String stateKey = baseKey + String.valueOf(ctx.estId);
+            if (rulesMap.containsKey(stateKey)) return rulesMap.get(stateKey);
         }
 
-        // --- TENTATIVA 3: PAÍS ---
         if (ctx.paiId != null) {
-            String chavePai = baseChave + String.valueOf(ctx.paiId);
-            if (mapaRegras.containsKey(chavePai)) return mapaRegras.get(chavePai);
+            String countryKey = baseKey + String.valueOf(ctx.paiId);
+            if (rulesMap.containsKey(countryKey)) return rulesMap.get(countryKey);
         }
 
         return null;

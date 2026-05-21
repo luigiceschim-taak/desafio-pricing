@@ -1,19 +1,15 @@
 public abstract class TaxStrategy {
-    // Método que cada estratégia deve implementar (Produto)
-    public abstract Tax__c search(TaxContext ctx, Map<String, Tax__c> mapaRegras);
+    public abstract Tax__c search(TaxContext ctx, Map<String, Tax__c> rulesMap);
 
-    // Método utilitário comum: tenta buscar na escada geográfica
-    protected Tax__c buscarNaGeografia(Id alvoId, TaxContext ctx, Map<String, Tax__c> mapaRegras) {
-        if (alvoId == null) return null;
-        String aId = String.valueOf(alvoId);
+    protected Tax__c searchByGeography(Id targetId, TaxContext ctx, Map<String, Tax__c> rulesMap) {
+        if (targetId == null) return null;
+        String targetIdStr = String.valueOf(targetId);
 
         if(ctx.cdId != null && ctx.estId != null) {
-            String chaveTripla = String.valueOf(aId) + String.valueOf(ctx.cdId) + String.valueOf(ctx.estId);
-            System.debug('>>> [TaxStrategy] Tentando chave TRIPLA: ' + chaveTripla);
-            if (mapaRegras.containsKey(chaveTripla)) return mapaRegras.get(chaveTripla);
+            String tripleKey = targetIdStr + String.valueOf(ctx.cdId) + String.valueOf(ctx.estId);
+            if (rulesMap.containsKey(tripleKey)) return rulesMap.get(tripleKey);
         }
 
-        System.debug('>>> [TaxStrategy] Nenhuma chave geográfica encontrada para o alvo ' + alvoId);
         return null;
     }
 }

@@ -4,15 +4,12 @@ public with sharing class OrderHandler extends OrderTriggerHandler {
     }
 
     public override void beforeUpdate() {
-        OrderService.validarStatusPedido((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
-        OrderService.naoPermitirEdicaoPedido((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        OrderService.validateIntegratedStatus((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        OrderService.preventOrderEdit((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
     }
 
     public override void afterUpdate() {
-        System.debug('calloutStatusActive - Início');
-
-        
-        OrderService.atualizarOrderItens((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        OrderService.updateOrderItems((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
         OrderService.calloutStatusActive((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
     }
 
