@@ -1,0 +1,44 @@
+/*
+ * Tailwind CSS não atravessa Shadow DOM via loadStyle.
+ * As classes abaixo espelham os valores exatos do Tailwind.
+ * Quando integrar Tailwind nativo (ex: lwc-tailwind), basta remover este arquivo
+ * — os class names no HTML já estão corretos.
+ */
+
+/* p-4 */
+.wrapper {
+    padding: 1rem;
+}
+
+/* bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors cursor-pointer border-0 */
+.btn-retry {
+    background-color: #dc2626;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, opacity 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* hover:bg-red-700 */
+.btn-retry:hover:not(:disabled) {
+    background-color: #b91c1c;
+}
+
+/* disabled:opacity-50 disabled:cursor-not-allowed */
+.btn-retry:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* tracking-wide */
+.btn-text {
+    letter-spacing: 0.025em;
+}

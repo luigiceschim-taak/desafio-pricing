@@ -1,37 +1,42 @@
 public with sharing class OrderService {
 
-    public static void preventOrderEdit(List<Order> newOrders, Map<Id, Order> oldOrders){
-       for(Order o : newOrders) {
-           Order oldOrder = oldOrders.get(o.Id);
-           if (oldOrder.AccountId != o.AccountId) {
-               o.addError('Changing the Account on an order is not allowed.');
-           }
-       }
-    }
+    private static final Map<String, Set<String>> STATUS_TRANSITIONS = new Map<String, Set<String>>{
+        'New'            => new Set<String>{'PendingApproval', 'New'},
+        'PendingApproval' => new Set<String>{'Approved', 'New'},
+        'Approved'         => new Set<String>{'Integrated', 'IntegrationError'},
+        'IntegrationError' => new Set<String>{'Integrated', 'IntegrationError'},
+        'Integrated'       => new Set<String>()
+    };
 
-    public static void validateIntegratedStatus(List<Order> orders, Map<Id, Order> oldOrders) {
+    public static void validateOrderEdit(List<Order> orders, Map<Id, Order> oldOrders) {
         for (Order o : orders) {
             Order oldOrder = oldOrders.get(o.Id);
             if (oldOrder == null) continue;
 
-            if (oldOrder.Status == 'Integrated') {
-                if (o.AccountId    != oldOrder.AccountId    ||
-                    o.Pricebook2Id != oldOrder.Pricebook2Id ||
-                    o.EffectiveDate != oldOrder.EffectiveDate ||
-                    o.Status       != oldOrder.Status) {
-                    o.addError('Orders with status "INTEGRATED" cannot be edited.');
+            if (oldOrder.Status != 'New') {
+                if (o.AccountId            != oldOrder.AccountId            ||
+                    o.Address__c           != oldOrder.Address__c           ||
+                    o.DistributionCenter__c != oldOrder.DistributionCenter__c ||
+                    o.Pricebook2Id         != oldOrder.Pricebook2Id         ||
+                    o.EffectiveDate        != oldOrder.EffectiveDate) {
+                    o.addError('Orders outside "New" status cannot be edited.');
                 }
+               continue;
             }
 
-            if (oldOrder.Status == 'IntegrationError') {
-                Boolean onlyRetry = (o.Status         == 'Approved'            &&
-                                     o.AccountId      == oldOrder.AccountId    &&
-                                     o.Pricebook2Id   == oldOrder.Pricebook2Id &&
-                                     o.EffectiveDate  == oldOrder.EffectiveDate);
-                if (!onlyRetry) {
-                    o.addError('Orders with status "IntegrationError" can only be retried by changing the status to "Approved".');
-                }
-            }
+            
+        }
+    }
+
+    public static void validateStatus(List<Order> orders, Map<Id, Order> oldOrders) {
+        for (Order o : orders) {
+            Order oldOrder = oldOrders.get(o.Id);
+            if (oldOrder == null) continue;
+
+            Set<String> allowed = STATUS_TRANSITIONS.get(oldOrder.Status);
+            if (allowed == null || allowed.contains(o.Status)) continue;
+
+            o.addError('Status transition from "' + oldOrder.Status + '" to "' + o.Status + '" is not allowed.');
         }
     }
 
@@ -41,6 +46,7 @@ public with sharing class OrderService {
 
         for (Order o : orders) {
             Order oldOrder = oldOrders.get(o.Id);
+            if (o.Status != 'New') continue;
             if (o.Address__c != oldOrder.Address__c || o.DistributionCenter__c != oldOrder.DistributionCenter__c) {
                 changedOrderIds.add(o.Id);
             }
@@ -66,8 +72,9 @@ public with sharing class OrderService {
 
         for (Order o : orders) {
             Order oldOrder = oldOrders.get(o.Id);
-
-            if (o.Status == 'Approved' && oldOrder.Status != 'Approved') {
+            if (oldOrder == null) continue;
+            Set<String> allowed = STATUS_TRANSITIONS.get(oldOrder.Status);
+            if (allowed != null && allowed.contains(o.Status) && o.Status == 'Approved') {
                 activeOrderIds.add(o.Id);
             }
         }

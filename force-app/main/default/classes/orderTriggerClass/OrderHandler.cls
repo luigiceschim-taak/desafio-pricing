@@ -4,8 +4,8 @@ public with sharing class OrderHandler extends OrderTriggerHandler {
     }
 
     public override void beforeUpdate() {
-        OrderService.validateIntegratedStatus((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
-        OrderService.preventOrderEdit((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        OrderService.validateOrderEdit((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        OrderService.validateStatus((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
     }
 
     public override void afterUpdate() {

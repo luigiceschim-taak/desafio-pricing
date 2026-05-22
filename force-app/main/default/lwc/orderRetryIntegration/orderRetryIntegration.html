@@ -1,0 +1,18 @@
+<template>
+    <template if:true={isIntegrationError}>
+        <div class="wrapper">
+            <button
+                class="btn-retry"
+                onclick={handleRetry}
+                disabled={isLoading}
+            >
+                <template if:true={isLoading}>
+                    <span class="btn-text">Enviando...</span>
+                </template>
+                <template if:false={isLoading}>
+                    <span class="btn-text">Iniciar tentativa de Reintegração</span>
+                </template>
+            </button>
+        </div>
+    </template>
+</template>
