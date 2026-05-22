@@ -28,15 +28,19 @@ public with sharing class OrderService {
         }
     }
 
-    public static void validateStatus(List<Order> orders, Map<Id, Order> oldOrders) {
-        for (Order o : orders) {
-            Order oldOrder = oldOrders.get(o.Id);
+    public static void validateStatus(List<Order> newOrdersList, Map<Id, Order> oldOrdersList) {
+        for (Order IOrder : newOrdersList) {
+            Order oldOrder = oldOrdersList.get(IOrder.Id);
+
+            if(IOrder.OrderItems.isEmpty() && IOrder.Status == 'New') {
+                IOrder.addError('Order must have at least one Order Item before changing status.');
+            }
             if (oldOrder == null) continue;
 
             Set<String> allowed = STATUS_TRANSITIONS.get(oldOrder.Status);
-            if (allowed == null || allowed.contains(o.Status)) continue;
+            if (allowed == null || allowed.contains(IOrder.Status)) continue;
 
-            o.addError('Status transition from "' + oldOrder.Status + '" to "' + o.Status + '" is not allowed.');
+            IOrder.addError('Status transition from "' + oldOrder.Status + '" to "' + IOrder.Status + '" is not allowed.');
         }
     }
 
