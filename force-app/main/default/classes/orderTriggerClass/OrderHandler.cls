@@ -11,6 +11,7 @@ public with sharing class OrderHandler extends OrderTriggerHandler {
     public override void afterUpdate() {
         OrderService.updateOrderItems((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
         OrderService.calloutStatusActive((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
+        GoalAttributionFacade.run((List<Order>) Trigger.new, (Map<Id, Order>) Trigger.oldMap);
     }
 
 

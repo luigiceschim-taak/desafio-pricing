@@ -29,13 +29,32 @@ public with sharing class OrderService {
     }
 
     public static void validateStatus(List<Order> newOrdersList, Map<Id, Order> oldOrdersList) {
+        Set<Id> orderIds = new Set<Id>();
+        for (Order o : newOrdersList) orderIds.add(o.Id);
+
+        // Relações filhas não vêm carregadas no contexto de trigger update (ex.: recálculo
+        // disparado ao inserir um OrderItem), então IOrder.OrderItems seria sempre vazio.
+        // Conta os itens reais no banco para a validação ser confiável.
+        Map<Id, Integer> itemCountByOrder = new Map<Id, Integer>();
+        for (AggregateResult ar : [
+                SELECT OrderId oid, COUNT(Id) cnt
+                FROM OrderItem
+                WHERE OrderId IN :orderIds
+                GROUP BY OrderId]) {
+            itemCountByOrder.put((Id) ar.get('oid'), (Integer) ar.get('cnt'));
+        }
+
         for (Order IOrder : newOrdersList) {
             Order oldOrder = oldOrdersList.get(IOrder.Id);
+            if (oldOrder == null) continue;
 
-            if(IOrder.OrderItems.isEmpty() && IOrder.Status == 'New') {
+            Integer itemCount = itemCountByOrder.containsKey(IOrder.Id) ? itemCountByOrder.get(IOrder.Id) : 0;
+
+            // New -> New (adicionar itens, recalcular, movimentar) é permitido.
+            // Só não pode SAIR para outro status com o pedido sem nenhum item.
+            if (oldOrder.Status != IOrder.Status && itemCount == 0) {
                 IOrder.addError('Order must have at least one Order Item before changing status.');
             }
-            if (oldOrder == null) continue;
 
             Set<String> allowed = STATUS_TRANSITIONS.get(oldOrder.Status);
             if (allowed == null || allowed.contains(IOrder.Status)) continue;

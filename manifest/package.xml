@@ -32,6 +32,9 @@
 		<members>Country__c</members>
 		<members>DistributionCenter__c</members>
 		<members>Freight__c</members>
+		<members>GoalItem__c</members>
+		<members>Goal_Condition_Payment__c</members>
+		<members>Goal__c</members>
 		<members>IntegrationLog__c</members>
 		<members>Margin__c</members>
 		<members>Order</members>
@@ -39,13 +42,18 @@
 		<members>PaymentTerm__c</members>
 		<members>Product2</members>
 		<members>ProductHierarchy__c</members>
+		<members>Product_Family__c</members>
 		<members>State__c</members>
 		<members>Tax__c</members>
 		<name>CustomObject</name>
 	</types>
-<types>
+	<types>
 		<members>*</members>
 		<name>LightningComponentBundle</name>
+	</types>
+	<types>
+		<members>Admin</members>
+		<name>Profile</name>
 	</types>
 	<types>
 		<members>*</members>
